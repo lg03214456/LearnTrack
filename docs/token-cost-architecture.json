@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "LearnTrack 開發 Token 消耗架構",
+    "quality_profile": "showcase",
+    "viewBox": [1160, 650],
+    "views": [
+      { "id": "main-cost-path", "label": "主要消耗路徑", "focus": ["request", "skill-loader", "repo-inspection", "edit-verify", "context-budget"], "note": "從需求進入規則、讀檔、修改與驗證，觀察 Token 如何累積。" },
+      { "id": "largest-drivers", "label": "最大消耗來源", "focus": ["long-lines", "conversation", "docs-specs", "context-budget"], "note": "超長單行、長對話與大型文件是目前三個主要來源。" },
+      { "id": "recommended-fixes", "label": "建議改善順序", "focus": ["format-split", "selective-docs", "archive-scope"], "note": "先格式化程式碼，再縮小文件載入與搜尋範圍。" }
+    ]
+  },
+  "components": [
+    { "id": "request", "type": "external", "label": "開發需求", "sublabel": "UI／功能／修正", "pos": [40, 245], "size": [135, 68] },
+    { "id": "skill-loader", "type": "security", "label": "Skill 規則載入", "sublabel": "Skill + engineering standards", "pos": [235, 245], "size": [165, 68], "tag": "每次程式工作" },
+    { "id": "repo-inspection", "type": "backend", "label": "Repository 檢查", "sublabel": "rg / Get-Content / codemap", "pos": [465, 245], "size": [170, 68] },
+    { "id": "edit-verify", "type": "backend", "label": "修改與驗證", "sublabel": "patch / test / build / browser", "pos": [700, 245], "size": [175, 68] },
+    { "id": "context-budget", "type": "cloud", "label": "Context／Token 預算", "sublabel": "輸入、輸出與重試累積", "pos": [940, 245], "size": [175, 68], "tag": "主要結果" },
+    { "id": "docs-specs", "type": "database", "label": "文件與 OpenSpec", "sublabel": "docs 48 KB + specs 147 KB", "pos": [250, 70], "size": [180, 72] },
+    { "id": "long-lines", "type": "database", "label": "超長單行程式碼", "sublabel": "31 個檔案 > 1,000 字元／行", "pos": [480, 70], "size": [195, 72], "tag": "最高優先" },
+    { "id": "conversation", "type": "external", "label": "長對話與圖片", "sublabel": "需求歷史、DOM、截圖輸出", "pos": [920, 70], "size": [190, 72] },
+    { "id": "format-split", "type": "frontend", "label": "格式化與責任拆分", "sublabel": "Prettier + focused components", "pos": [452, 450], "size": [195, 72], "tag": "優先 1" },
+    { "id": "selective-docs", "type": "frontend", "label": "文件漸進式載入", "sublabel": "短 Skill + feature codemap", "pos": [220, 450], "size": [195, 72], "tag": "優先 2" },
+    { "id": "archive-scope", "type": "frontend", "label": "封存與縮小搜尋範圍", "sublabel": "Archive OpenSpec + 新任務", "pos": [910, 450], "size": [205, 72], "tag": "優先 3" }
+  ],
+  "connections": [
+    { "id": "request-skill", "from": "request", "to": "skill-loader", "label": "觸發規則", "variant": "emphasis" },
+    { "id": "skill-repo", "from": "skill-loader", "to": "repo-inspection", "label": "要求讀取上下文", "variant": "emphasis", "labelDy": 58 },
+    { "id": "repo-edit", "from": "repo-inspection", "to": "edit-verify", "label": "提供修改證據", "variant": "emphasis" },
+    { "id": "edit-budget", "from": "edit-verify", "to": "context-budget", "label": "測試輸出與重試", "variant": "emphasis", "labelDy": 58 },
+    { "id": "docs-skill", "from": "docs-specs", "to": "skill-loader", "label": "完整規範與歷史規格", "variant": "dashed", "fromSide": "bottom", "toSide": "top" },
+    { "id": "lines-inspection", "from": "long-lines", "to": "repo-inspection", "label": "小修改仍需整行讀取", "variant": "dashed", "fromSide": "bottom", "toSide": "top" },
+    { "id": "conversation-budget", "from": "conversation", "to": "context-budget", "label": "持續佔用對話上下文", "variant": "dashed", "fromSide": "bottom", "toSide": "top" },
+    { "id": "format-reduces", "from": "format-split", "to": "repo-inspection", "label": "減少讀檔與 patch 重試", "variant": "security", "fromSide": "top", "toSide": "bottom" },
+    { "id": "selective-reduces", "from": "selective-docs", "to": "skill-loader", "label": "只載入相關規則", "variant": "security", "fromSide": "top", "toSide": "bottom" },
+    { "id": "archive-reduces", "from": "archive-scope", "to": "context-budget", "label": "縮小搜尋與任務歷史", "variant": "security", "fromSide": "top", "toSide": "bottom" }
+  ],
+  "cards": [
+    { "dot": "rose", "title": "目前最大問題", "items": ["31 個原始碼檔案含超過 1,000 字元的單行", "長對話、圖片與瀏覽器 DOM 會持續累積上下文"] },
+    { "dot": "amber", "title": "規則成本", "items": ["Clean Code 工作至少載入 Skill 與 9.2 KB 工程規範", "新增模組時還會載入約 8.9 KB codemap"] },
+    { "dot": "emerald", "title": "建議順序", "items": ["先設定 Prettier 並格式化長單行", "再拆分 codemap／Skill，最後封存完成的 OpenSpec"] }
+  ]
+}

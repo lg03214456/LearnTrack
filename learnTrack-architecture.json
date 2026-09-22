@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "LearnTrack 系統架構：現況 vs 目標",
+    "output": "learnTrack-architecture.html",
+    "quality_profile": "showcase",
+    "locale": "zh-CN"
+  },
+  "components": [
+    { "id": "browser", "type": "external", "label": "瀏覽器", "sublabel": "老師／管理員", "pos": [60, 250], "size": [140, 56] },
+    { "id": "server-components", "type": "backend", "label": "Server Components", "sublabel": "src/app/(dashboard)/*.tsx", "pos": [280, 140], "size": [180, 56] },
+    { "id": "client-components", "type": "frontend", "label": "Client Components", "sublabel": "src/components/views/*.tsx", "pos": [280, 230], "size": [180, 56] },
+    { "id": "actions", "type": "backend", "label": "Server Actions", "sublabel": "缺失 ❌", "pos": [540, 100], "size": [160, 56] },
+    { "id": "services", "type": "backend", "label": "Domain Services", "sublabel": "缺失 ❌", "pos": [540, 180], "size": [160, 56] },
+    { "id": "repository", "type": "backend", "label": "Repository", "sublabel": "src/server/repositories/", "pos": [540, 260], "size": [160, 56] },
+    { "id": "mock-repo", "type": "backend", "label": "MockRepository", "sublabel": "實作", "pos": [760, 260], "size": [150, 56] },
+    { "id": "mock-fixtures", "type": "database", "label": "Mock Fixtures", "sublabel": "View Model 直存", "pos": [960, 260], "size": [150, 56] },
+    { "id": "server-domain-types", "type": "database", "label": "@/server/domain/types", "sublabel": "Domain+VM 混雜", "pos": [280, 320], "size": [180, 56] },
+    { "id": "supabase-auth", "type": "security", "label": "Supabase Auth", "sublabel": "未接入 ⏳", "pos": [760, 100], "size": [150, 56] },
+    { "id": "supabase-rls", "type": "security", "label": "PostgreSQL RLS", "sublabel": "未接入 ⏳", "pos": [760, 180], "size": [150, 56] },
+    { "id": "supabase-db", "type": "database", "label": "PostgreSQL", "sublabel": "未接入 ⏳", "pos": [960, 180], "size": [150, 56] }
+  ],
+  "connections": [
+    { "id": "browser-to-sc", "from": "browser", "to": "server-components", "label": "HTTPS 請求", "variant": "emphasis" },
+    { "id": "sc-to-cc", "from": "server-components", "to": "client-components", "label": "傳遞 ViewModel", "labelDy": 24 },
+    { "id": "sc-to-repo-current", "from": "server-components", "to": "repository", "label": "直接呼叫 ❌", "variant": "dashed" },
+    { "id": "repo-to-mock", "from": "repository", "to": "mock-repo" },
+    { "id": "mock-to-fixtures", "from": "mock-repo", "to": "mock-fixtures" },
+    { "id": "cc-to-types", "from": "client-components", "to": "server-domain-types", "label": "直接 import ❌", "variant": "security", "width": 2, "labelDy": 24 },
+    { "id": "actions-to-services", "from": "actions", "to": "services", "label": "呼叫業務邏輯", "variant": "dashed", "labelDy": 24 },
+    { "id": "services-to-repo", "from": "services", "to": "repository", "label": "呼叫 Repository", "variant": "dashed", "labelDy": 24 },
+    { "id": "repo-to-supabase", "from": "repository", "to": "supabase-db", "label": "SQL + Mapping", "variant": "dashed", "fromSide": "bottom", "via": [[620, 340], [1200, 340], [1200, 100], [960, 100]], "labelAt": [1080, 110] },
+    { "id": "actions-to-auth", "from": "actions", "to": "supabase-auth", "label": "取得 Session", "variant": "dashed", "labelDy": 50 },
+    { "id": "repo-to-rls", "from": "repository", "to": "supabase-rls", "label": "組織隔離", "variant": "dashed" }
+  ],
+  "cards": [
+    { "dot": "rose", "title": "關鍵缺口 (P0)", "items": [
+      "無 Server Actions — 寫入操作無驗證、無權限",
+      "無 Domain Services — 業務規則在 Client onClick",
+      "Client 直接 import @/server/domain/types — 違反邊界",
+      "Repository 直接回傳 View Model — 缺少 Mapping",
+      "ORG 硬編碼 org-001 — 無多租戶"
+    ]},
+    { "dot": "orange", "title": "架構不符 (P1)", "items": [
+      "文檔宣稱有 Action/Service，實際不存在",
+      "目錄非 Feature-based (engineering-standards §3)",
+      "型別未分層：Entity/Enum/VM 混在 types.ts",
+      "無輸入驗證、無統一錯誤代碼"
+    ]},
+    { "dot": "emerald", "title": "已就緒", "items": [
+      "Next.js 16 + React 19 + TS strict",
+      "Repository Interface 定義良好",
+      "Mock Fixtures 集中管理、關聯完整",
+      "Vitest + Testing Library 就緒",
+      "Shell/Navigation/UI 元件可複用"
+    ]}
+  ]
+}

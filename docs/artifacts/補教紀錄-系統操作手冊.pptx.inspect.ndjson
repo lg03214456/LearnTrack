@@ -1,0 +1,207 @@
+{"kind":"deck","id":"pr/iznyyi","name":"Deck"}
+{"kind":"layout","layoutId":"684d16f1-bf2a-40be-8a9b-f7b6a30b5a33","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"6132b782-52fb-450f-bab9-1e4dae8ce7bb","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/hzxec6","slide":1,"title":"補教紀錄","textShapes":6}
+{"kind":"shape","id":"sh/ipszm1gf","slide":1,"bbox":[0,0,455,720]}
+{"kind":"shape","id":"sh/5s3yhgzq","slide":1,"bbox":[455,0,12,720]}
+{"kind":"textbox","id":"sh/4rahoby5","slide":1,"text":"補教紀錄","textPreview":"補教紀錄","textChars":4,"textLines":1,"bbox":[68,76,310,48]}
+{"kind":"textbox","id":"sh/vm1gb6ho","slide":1,"text":"PROGRESS HUB","textPreview":"PROGRESS HUB","textChars":12,"textLines":1,"bbox":[70,128,280,22]}
+{"kind":"textbox","id":"sh/u1szi1g3","slide":1,"text":"系統操作手冊","textPreview":"系統操作手冊","textChars":6,"textLines":1,"bbox":[540,205,610,84]}
+{"kind":"textbox","id":"sh/hojydwzu","slide":1,"text":"從期初設定、每日課堂到學生追蹤","textPreview":"從期初設定、每日課堂到學生追蹤","textChars":15,"textLines":1,"bbox":[544,318,590,40]}
+{"kind":"textbox","id":"sh/wnahkry9","slide":1,"text":"現行 Mock 測試版 · 2026","textPreview":"現行 Mock 測試版 · 2026","textChars":18,"textLines":1,"bbox":[544,530,420,28]}
+{"kind":"textbox","id":"sh/fil0nqhs","slide":1,"text":"適用：Owner／主任／老師","textPreview":"適用：Owner／主任／老師","textChars":14,"textLines":1,"bbox":[544,570,420,28]}
+{"kind":"notes","id":"nt/hzxec6","slide":1,"text":""}
+{"kind":"slide","id":"sl/9vkr3a","slide":2,"title":"01 · 系統概念","textShapes":18}
+{"kind":"textbox","id":"sh/472hkvm1","slide":2,"text":"01 · 系統概念","textPreview":"01 · 系統概念","textChars":9,"textLines":1,"bbox":[68,40,620,25]}
+{"kind":"textbox","id":"sh/36t0rq5g","slide":2,"text":"先理解四個核心資料關係","textPreview":"先理解四個核心資料關係","textChars":11,"textLines":1,"bbox":[68,73,1050,54]}
+{"kind":"shape","id":"sh/25kzil4v","slide":2,"bbox":[68,139,1144,2]}
+{"kind":"textbox","id":"sh/dwvix0ni","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[1160,45,52,24]}
+{"kind":"textbox","id":"sh/cv2hovmx","slide":2,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[70,192,70,30]}
+{"kind":"textbox","id":"sh/but0vq5c","slide":2,"text":"教材範本","textPreview":"教材範本","textChars":4,"textLines":1,"bbox":[70,238,245,38]}
+{"kind":"textbox","id":"sh/qtkzm54r","slide":2,"text":"定義教材版本、單元與章節","textPreview":"定義教材版本、單元與章節","textChars":12,"textLines":1,"bbox":[70,291,235,72]}
+{"kind":"shape","id":"sh/l0vi1kne","slide":2,"bbox":[320,244,24,2]}
+{"kind":"textbox","id":"sh/0zmhsfm9","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[364,192,70,30]}
+{"kind":"textbox","id":"sh/2h47utgv","slide":2,"text":"班級與排課","textPreview":"班級與排課","textChars":5,"textLines":1,"bbox":[364,238,245,38]}
+{"kind":"textbox","id":"sh/nido3yxg","slide":2,"text":"決定教師、上課日期與成員","textPreview":"決定教師、上課日期與成員","textChars":12,"textLines":1,"bbox":[364,291,235,72]}
+{"kind":"shape","id":"sh/ojmpw3y1","slide":2,"bbox":[614,244,24,2]}
+{"kind":"textbox","id":"sh/pkv658fm","slide":2,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[658,192,70,30]}
+{"kind":"textbox","id":"sh/al47ytg7","slide":2,"text":"學生修課","textPreview":"學生修課","textChars":4,"textLines":1,"bbox":[658,238,245,38]}
+{"kind":"textbox","id":"sh/bmd87yxc","slide":2,"text":"每位學生獨立指定教材版本","textPreview":"每位學生獨立指定教材版本","textChars":12,"textLines":1,"bbox":[658,291,235,72]}
+{"kind":"shape","id":"sh/c7mp03yx","slide":2,"bbox":[908,244,24,2]}
+{"kind":"textbox","id":"sh/x8vq98fi","slide":2,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[952,192,70,30]}
+{"kind":"textbox","id":"sh/qp07m9gn","slide":2,"text":"每日紀錄","textPreview":"每日紀錄","textChars":4,"textLines":1,"bbox":[952,238,245,38]}
+{"kind":"textbox","id":"sh/rqtoveh8","slide":2,"text":"點名、進度、考卷、成績與評語","textPreview":"點名、進度、考卷、成績與評語","textChars":14,"textLines":1,"bbox":[952,291,235,72]}
+{"kind":"shape","id":"sh/vup43ad0","slide":2,"bbox":[70,440,1140,122]}
+{"kind":"textbox","id":"sh/utg3u5wf","slide":2,"text":"關鍵原則","textPreview":"關鍵原則","textChars":4,"textLines":1,"bbox":[102,468,160,32]}
+{"kind":"textbox","id":"sh/hw7m5kv6","slide":2,"text":"班級不綁死教材版本；同一班可容納不同年級，學生依自己的修課計畫記錄進度。","textPreview":"班級不綁死教材版本；同一班可容納不同年級，學生依自己的修課計畫記錄進度。","textChars":36,"textLines":1,"bbox":[278,465,865,56]}
+{"kind":"textbox","id":"sh/gvylwfel","slide":2,"text":"補教紀錄 · Progress Hub","textPreview":"補教紀錄 · Progress Hub","textChars":19,"textLines":1,"bbox":[68,678,300,18]}
+{"kind":"notes","id":"nt/9vkr3a","slide":2,"text":""}
+{"kind":"slide","id":"sl/04sb4a","slide":3,"title":"02 · 身分與權限","textShapes":13}
+{"kind":"textbox","id":"sh/ozmto3ip","slide":3,"text":"02 · 身分與權限","textPreview":"02 · 身分與權限","textChars":10,"textLines":1,"bbox":[68,40,620,25]}
+{"kind":"textbox","id":"sh/nydsvy14","slide":3,"text":"角色決定可操作範圍，不只決定看見什麼","textPreview":"角色決定可操作範圍，不只決定看見什麼","textChars":18,"textLines":1,"bbox":[68,73,1050,54]}
+{"kind":"shape","id":"sh/mx4bmt0j","slide":3,"bbox":[68,139,1144,2]}
+{"kind":"textbox","id":"sh/xofal8j6","slide":3,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1160,45,52,24]}
+{"kind":"textbox","id":"sh/wn6ts3il","slide":3,"text":"Owner","textPreview":"Owner","textChars":5,"textLines":1,"bbox":[88,186,210,34]}
+{"kind":"textbox","id":"sh/bmxsjy10","slide":3,"text":"全機構設定、帳號與角色治理","textPreview":"全機構設定、帳號與角色治理","textChars":13,"textLines":1,"bbox":[320,188,730,30]}
+{"kind":"shape","id":"sh/al4bqt0v","slide":3,"bbox":[88,239,1060,1]}
+{"kind":"textbox","id":"sh/lsfupsji","slide":3,"text":"主任","textPreview":"主任","textChars":2,"textLines":1,"bbox":[88,290,210,34]}
+{"kind":"textbox","id":"sh/kr6twnix","slide":3,"text":"日常營運、班級與學生管理","textPreview":"日常營運、班級與學生管理","textChars":12,"textLines":1,"bbox":[320,292,730,30]}
+{"kind":"shape","id":"sh/mh4f6dgr","slide":3,"bbox":[88,343,1060,1]}
+{"kind":"textbox","id":"sh/72dgfyxc","slide":3,"text":"老師","textPreview":"老師","textChars":2,"textLines":1,"bbox":[88,394,210,34]}
+{"kind":"textbox","id":"sh/83mx83eh","slide":3,"text":"被指派班級、點名與學習紀錄","textPreview":"被指派班級、點名與學習紀錄","textChars":13,"textLines":1,"bbox":[320,396,730,30]}
+{"kind":"shape","id":"sh/94vyh8f2","slide":3,"bbox":[88,447,1060,1]}
+{"kind":"textbox","id":"sh/u54fadwn","slide":3,"text":"學生／家長","textPreview":"學生／家長","textChars":5,"textLines":1,"bbox":[88,498,210,34]}
+{"kind":"textbox","id":"sh/v6dgjix8","slide":3,"text":"僅本人或已綁定孩子資料","textPreview":"僅本人或已綁定孩子資料","textChars":11,"textLines":1,"bbox":[320,500,730,30]}
+{"kind":"shape","id":"sh/w76hcnet","slide":3,"bbox":[88,551,1060,1]}
+{"kind":"textbox","id":"sh/h8fylsfe","slide":3,"text":"目前左側的 Mock 身分切換只供流程驗證，不是真實登入。","textPreview":"目前左側的 Mock 身分切換只供流程驗證，不是真實登入。","textChars":29,"textLines":1,"bbox":[88,620,900,30]}
+{"kind":"textbox","id":"sh/a9kfytgj","slide":3,"text":"補教紀錄 · Progress Hub","textPreview":"補教紀錄 · Progress Hub","textChars":19,"textLines":1,"bbox":[68,678,300,18]}
+{"kind":"notes","id":"nt/04sb4a","slide":3,"text":""}
+{"kind":"slide","id":"sl/5bomxu","slide":4,"title":"03 · 學生名單","textShapes":6}
+{"kind":"textbox","id":"sh/e94jqhkv","slide":4,"text":"03 · 學生名單","textPreview":"03 · 學生名單","textChars":9,"textLines":1,"bbox":[68,40,620,25]}
+{"kind":"textbox","id":"sh/1cv21wjm","slide":4,"text":"學生名單是日常查詢的主入口","textPreview":"學生名單是日常查詢的主入口","textChars":13,"textLines":1,"bbox":[68,73,1050,54]}
+{"kind":"shape","id":"sh/gbm1sri1","slide":4,"bbox":[68,139,1144,2]}
+{"kind":"textbox","id":"sh/3yxk361c","slide":4,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1160,45,52,24]}
+{"kind":"textbox","id":"sh/p0f25wji","slide":4,"text":"主要操作","textPreview":"主要操作","textChars":4,"textLines":1,"bbox":[905,178,240,34]}
+{"kind":"textbox","id":"sh/oz61wbix","slide":4,"text":"1  搜尋姓名或學號\n\n2  依班級、狀態即時篩選\n\n3  點學生進入個人頁\n\n4  管理資料與班級歸屬\n\n5  停課或離班以「封存」保留歷史","textPreview":"1  搜尋姓名或學號 |  | 2  依班級、狀態即時篩選 |  | 3  點學生進入個人頁 |  | 4  管理資料與班級歸屬 |  | 5  停課或離班以「封存」保留歷史","textChars":71,"textLines":9,"bbox":[905,232,280,300]}
+{"kind":"textbox","id":"sh/j2tkr218","slide":4,"text":"補教紀錄 · Progress Hub","textPreview":"補教紀錄 · Progress Hub","textChars":19,"textLines":1,"bbox":[68,678,300,18]}
+{"kind":"image","id":"im/b6l0nihg","slide":4,"name":"","geometry":"roundRect","alt":"補教紀錄系統畫面：students.png","bbox":[70,170,790,445]}
+{"kind":"notes","id":"nt/5bomxu","slide":4,"text":""}
+{"kind":"slide","id":"sl/g2ahyg","slide":5,"title":"04 · 學生個人頁","textShapes":7}
+{"kind":"textbox","id":"sh/ad8r6tgj","slide":5,"text":"04 · 學生個人頁","textPreview":"04 · 學生個人頁","textChars":10,"textLines":1,"bbox":[68,40,620,25]}
+{"kind":"textbox","id":"sh/x0jq1ozu","slide":5,"text":"個人頁集中呈現每位學生的完整學習軌跡","textPreview":"個人頁集中呈現每位學生的完整學習軌跡","textChars":18,"textLines":1,"bbox":[68,73,1050,54]}
+{"kind":"shape","id":"sh/wza98jyp","slide":5,"bbox":[68,139,1144,2]}
+{"kind":"textbox","id":"sh/j2183yh0","slide":5,"text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1160,45,52,24]}
+{"kind":"textbox","id":"sh/i1sratgf","slide":5,"text":"Menu Bar 四個維度","textPreview":"Menu Bar 四個維度","textChars":13,"textLines":1,"bbox":[70,176,350,35]}
+{"kind":"textbox","id":"sh/54jq58z6","slide":5,"text":"個人資料\n課堂紀錄\n考試紀錄\n修課進度","textPreview":"個人資料 | 課堂紀錄 | 考試紀錄 | 修課進度","textChars":19,"textLines":4,"bbox":[70,232,240,185]}
+{"kind":"textbox","id":"sh/k3a9c3yl","slide":5,"text":"切換頁籤會保留目前捲動位置；網址 tab 也會同步更新，方便重新整理或分享指定頁籤。","textPreview":"切換頁籤會保留目前捲動位置；網址 tab 也會同步更新，方便重新整理或分享指定頁籤。","textChars":42,"textLines":1,"bbox":[70,458,330,110]}
+{"kind":"textbox","id":"sh/65sredgr","slide":5,"text":"補教紀錄 · Progress Hub","textPreview":"補教紀錄 · Progress Hub","textChars":19,"textLines":1,"bbox":[68,678,300,18]}
+{"kind":"image","id":"im/ih8bml8b","slide":5,"name":"","geometry":"roundRect","alt":"補教紀錄系統畫面：student-detail.png","bbox":[430,170,780,448]}
+{"kind":"notes","id":"nt/g2ahyg","slide":5,"text":""}
+{"kind":"slide","id":"sl/k4fz9y","slide":6,"title":"05 · 全體學生進度","textShapes":7}
+{"kind":"textbox","id":"sh/h072x4fq","slide":6,"text":"05 · 全體學生進度","textPreview":"05 · 全體學生進度","textChars":11,"textLines":1,"bbox":[68,40,620,25]}
+{"kind":"textbox","id":"sh/udgj2pwf","slide":6,"text":"先用進度總覽找出需要關注的學生","textPreview":"先用進度總覽找出需要關注的學生","textChars":15,"textLines":1,"bbox":[68,73,1050,54]}
+{"kind":"shape","id":"sh/vepkvux0","slide":6,"bbox":[68,139,1144,2]}
+{"kind":"textbox","id":"sh/43i18zeh","slide":6,"text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[1160,45,52,24]}
+{"kind":"textbox","id":"sh/i10j69wb","slide":6,"text":"操作方式","textPreview":"操作方式","textChars":4,"textLines":1,"bbox":[900,178,260,34]}
+{"kind":"textbox","id":"sh/329kzuxw","slide":6,"text":"1  搜尋學生\n\n2  依班級或狀態篩選\n\n3  比較教材完成比例\n\n4  查看最近更新時間\n\n5  點入學生個人頁處理","textPreview":"1  搜尋學生 |  | 2  依班級或狀態篩選 |  | 3  比較教材完成比例 |  | 4  查看最近更新時間 |  | 5  點入學生個人頁處理","textChars":60,"textLines":9,"bbox":[900,236,285,300]}
+{"kind":"textbox","id":"sh/s7i1cjed","slide":6,"text":"這一頁用於『找人』與判讀整體狀態；實際更新應在個人修課進度或今日課堂完成。","textPreview":"這一頁用於『找人』與判讀整體狀態；實際更新應在個人修課進度或今日課堂完成。","textChars":37,"textLines":1,"bbox":[900,548,290,82]}
+{"kind":"textbox","id":"sh/d8b25ofy","slide":6,"text":"補教紀錄 · Progress Hub","textPreview":"補教紀錄 · Progress Hub","textChars":19,"textLines":1,"bbox":[68,678,300,18]}
+{"kind":"image","id":"im/87a5ozed","slide":6,"name":"","geometry":"roundRect","alt":"補教紀錄系統畫面：progress.png","bbox":[70,170,780,445]}
+{"kind":"notes","id":"nt/k4fz9y","slide":6,"text":""}
+{"kind":"slide","id":"sl/rvw6mk","slide":7,"title":"06 · 個人進度操作","textShapes":8}
+{"kind":"textbox","id":"sh/1g3i1kbq","slide":7,"text":"06 · 個人進度操作","textPreview":"06 · 個人進度操作","textChars":11,"textLines":1,"bbox":[68,40,620,25]}
+{"kind":"textbox","id":"sh/edczqpcf","slide":7,"text":"個人修課進度依教材版本逐項更新","textPreview":"個人修課進度依教材版本逐項更新","textChars":15,"textLines":1,"bbox":[68,73,1050,54]}
+{"kind":"shape","id":"sh/fel0zutk","slide":7,"bbox":[68,139,1144,2]}
+{"kind":"textbox","id":"sh/ojehwzuh","slide":7,"text":"07","textPreview":"07","textChars":2,"textLines":1,"bbox":[1160,45,52,24]}
+{"kind":"textbox","id":"sh/2hwzupcb","slide":7,"text":"四種狀態","textPreview":"四種狀態","textChars":4,"textLines":1,"bbox":[880,178,250,34]}
+{"kind":"textbox","id":"sh/ni503utw","slide":7,"text":"待進行　尚未開始\n\n進行中　目前正在學習\n\n已完成　納入教材完成率\n\n略過　保留項目但不要求完成","textPreview":"待進行　尚未開始 |  | 進行中　目前正在學習 |  | 已完成　納入教材完成率 |  | 略過　保留項目但不要求完成","textChars":48,"textLines":7,"bbox":[880,232,320,220]}
+{"kind":"shape","id":"sh/c7e10zud","slide":7,"bbox":[880,478,300,122]}
+{"kind":"textbox","id":"sh/x8ni94by","slide":7,"text":"操作原則","textPreview":"操作原則","textChars":4,"textLines":1,"bbox":[908,500,160,30]}
+{"kind":"textbox","id":"sh/hwzmpoji","slide":7,"text":"更新單一項目後按「更新」；課堂中的頁數或學習位置改用選填備註記錄。","textPreview":"更新單一項目後按「更新」；課堂中的頁數或學習位置改用選填備註記錄。","textChars":33,"textLines":1,"bbox":[908,540,245,52]}
+{"kind":"textbox","id":"sh/gvq5gj2x","slide":7,"text":"補教紀錄 · Progress Hub","textPreview":"補教紀錄 · Progress Hub","textChars":19,"textLines":1,"bbox":[68,678,300,18]}
+{"kind":"image","id":"im/47apgjux","slide":7,"name":"","geometry":"roundRect","alt":"補教紀錄系統畫面：student-plans.png","bbox":[70,170,760,445]}
+{"kind":"notes","id":"nt/rvw6mk","slide":7,"text":""}
+{"kind":"slide","id":"sl/i2ttw4","slide":8,"title":"07 · 教材範本庫","textShapes":7}
+{"kind":"textbox","id":"sh/e90bihs3","slide":8,"text":"07 · 教材範本庫","textPreview":"07 · 教材範本庫","textChars":10,"textLines":1,"bbox":[68,40,620,25]}
+{"kind":"textbox","id":"sh/1cbatwbe","slide":8,"text":"教材範本只管理可重複使用的教學結構","textPreview":"教材範本只管理可重複使用的教學結構","textChars":17,"textLines":1,"bbox":[68,73,1050,54]}
+{"kind":"shape","id":"sh/0b2tkrat","slide":8,"bbox":[68,139,1144,2]}
+{"kind":"textbox","id":"sh/netsv6tk","slide":8,"text":"08","textPreview":"08","textChars":2,"textLines":1,"bbox":[1160,45,52,24]}
+{"kind":"textbox","id":"sh/9gbaxwbq","slide":8,"text":"建立順序","textPreview":"建立順序","textChars":4,"textLines":1,"bbox":[880,182,240,32]}
+{"kind":"textbox","id":"sh/of2toba5","slide":8,"text":"範本名稱\n→ 年級／科目／版本\n→ 單元（大標題）\n→ 章節（單元內內容）\n→ 發布版本","textPreview":"範本名稱 | → 年級／科目／版本 | → 單元（大標題） | → 章節（單元內內容） | → 發布版本","textChars":44,"textLines":5,"bbox":[880,238,290,240]}
+{"kind":"textbox","id":"sh/3ipsj2tg","slide":8,"text":"講義與考卷分開建立；額外考卷可在課堂紀錄中臨時新增，不必污染教材完成率。","textPreview":"講義與考卷分開建立；額外考卷可在課堂紀錄中臨時新增，不必污染教材完成率。","textChars":36,"textLines":1,"bbox":[880,510,300,105]}
+{"kind":"textbox","id":"sh/ihgraxsv","slide":8,"text":"補教紀錄 · Progress Hub","textPreview":"補教紀錄 · Progress Hub","textChars":19,"textLines":1,"bbox":[68,678,300,18]}
+{"kind":"image","id":"im/rmx4v6tw","slide":8,"name":"","geometry":"roundRect","alt":"補教紀錄系統畫面：curriculum.png","bbox":[70,174,760,430]}
+{"kind":"notes","id":"nt/i2ttw4","slide":8,"text":""}
+{"kind":"slide","id":"sl/nzheh0","slide":9,"title":"08 · 課程班級","textShapes":6}
+{"kind":"textbox","id":"sh/nq9sfedc","slide":9,"text":"08 · 課程班級","textPreview":"08 · 課程班級","textChars":9,"textLines":1,"bbox":[68,40,620,25]}
+{"kind":"textbox","id":"sh/8rit8jex","slide":9,"text":"班級頁負責成員、教師與固定排課","textPreview":"班級頁負責成員、教師與固定排課","textChars":15,"textLines":1,"bbox":[68,73,1050,54]}
+{"kind":"shape","id":"sh/9srahovi","slide":9,"bbox":[68,139,1144,2]}
+{"kind":"textbox","id":"sh/at0batw3","slide":9,"text":"09","textPreview":"09","textChars":2,"textLines":1,"bbox":[1160,45,52,24]}
+{"kind":"textbox","id":"sh/wvitcjet","slide":9,"text":"班級可以做什麼？","textPreview":"班級可以做什麼？","textChars":8,"textLines":1,"bbox":[900,178,285,34]}
+{"kind":"textbox","id":"sh/xwbulove","slide":9,"text":"• 新增／編輯班級\n\n• 指派教師與負責導師\n\n• 設定每週多個上課時段\n\n• 加入或移出學生\n\n• 查看篩選後學生名單\n\n• 封存已停開班級","textPreview":"• 新增／編輯班級 |  | • 指派教師與負責導師 |  | • 設定每週多個上課時段 |  | • 加入或移出學生 |  | • 查看篩選後學生名單 |  | • 封存已停開班級","textChars":71,"textLines":11,"bbox":[900,236,290,340]}
+{"kind":"textbox","id":"sh/qxgbypwj","slide":9,"text":"補教紀錄 · Progress Hub","textPreview":"補教紀錄 · Progress Hub","textChars":19,"textLines":1,"bbox":[68,678,300,18]}
+{"kind":"image","id":"im/m147yl4f","slide":9,"name":"","geometry":"roundRect","alt":"補教紀錄系統畫面：classes.png","bbox":[70,170,780,445]}
+{"kind":"notes","id":"nt/nzheh0","slide":9,"text":""}
+{"kind":"slide","id":"sl/gnljqu","slide":10,"title":"09 · 今日課堂","textShapes":15}
+{"kind":"textbox","id":"sh/hwfqt8b2","slide":10,"text":"09 · 今日課堂","textPreview":"09 · 今日課堂","textChars":9,"textLines":1,"bbox":[68,40,620,25]}
+{"kind":"textbox","id":"sh/uto7ytcb","slide":10,"text":"一堂課內完成點名與個別進度登錄","textPreview":"一堂課內完成點名與個別進度登錄","textChars":15,"textLines":1,"bbox":[68,73,1050,54]}
+{"kind":"shape","id":"sh/vux8rytw","slide":10,"bbox":[68,139,1144,2]}
+{"kind":"textbox","id":"sh/4zq943ud","slide":10,"text":"10","textPreview":"10","textChars":2,"textLines":1,"bbox":[1160,45,52,24]}
+{"kind":"textbox","id":"sh/ixor2dc7","slide":10,"text":"建議操作順序","textPreview":"建議操作順序","textChars":6,"textLines":1,"bbox":[890,178,270,34]}
+{"kind":"shape","id":"sh/jyh8vits","slide":10,"bbox":[890,238,52,52]}
+{"kind":"textbox","id":"sh/snq98nup","slide":10,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[890,248,52,28]}
+{"kind":"textbox","id":"sh/tozq1sbu","slide":10,"text":"確認日期與學生","textPreview":"確認日期與學生","textChars":7,"textLines":1,"bbox":[966,237,235,32]}
+{"kind":"textbox","id":"sh/hoj6hory","slide":10,"text":"依排課及有效 Enrollment 產生名單","textPreview":"依排課及有效 Enrollment 產生名單","textChars":22,"textLines":1,"bbox":[966,272,235,48]}
+{"kind":"shape","id":"sh/w3qp8jqd","slide":10,"bbox":[890,354,52,52]}
+{"kind":"textbox","id":"sh/v2hofe9s","slide":10,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[890,364,52,28]}
+{"kind":"textbox","id":"sh/u1876987","slide":10,"text":"調整出席狀態","textPreview":"調整出席狀態","textChars":6,"textLines":1,"bbox":[966,353,235,32]}
+{"kind":"textbox","id":"sh/5sjqloru","slide":10,"text":"出席、遲到、請假或缺席","textPreview":"出席、遲到、請假或缺席","textChars":11,"textLines":1,"bbox":[966,388,235,48]}
+{"kind":"shape","id":"sh/4rapcjqp","slide":10,"bbox":[890,470,52,52]}
+{"kind":"textbox","id":"sh/jq1ojy94","slide":10,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[890,480,52,28]}
+{"kind":"textbox","id":"sh/ips7at8j","slide":10,"text":"填寫個別進度","textPreview":"填寫個別進度","textChars":6,"textLines":1,"bbox":[966,469,235,32]}
+{"kind":"textbox","id":"sh/lwz694rq","slide":10,"text":"選學生教材項目、狀態與選填備註","textPreview":"選學生教材項目、狀態與選填備註","textChars":15,"textLines":1,"bbox":[966,504,235,48]}
+{"kind":"textbox","id":"sh/0v6p0zq5","slide":10,"text":"最後按「統一更新」一次送出整堂課狀態。","textPreview":"最後按「統一更新」一次送出整堂課狀態。","textChars":19,"textLines":1,"bbox":[890,600,300,42]}
+{"kind":"textbox","id":"sh/cruxc32d","slide":10,"text":"補教紀錄 · Progress Hub","textPreview":"補教紀錄 · Progress Hub","textChars":19,"textLines":1,"bbox":[68,678,300,18]}
+{"kind":"image","id":"im/8nq54fex","slide":10,"name":"","geometry":"roundRect","alt":"補教紀錄系統畫面：class-daily.png","bbox":[70,170,770,445]}
+{"kind":"notes","id":"nt/gnljqu","slide":10,"text":""}
+{"kind":"slide","id":"sl/8uh76i","slide":11,"title":"10 · 出缺席","textShapes":6}
+{"kind":"textbox","id":"sh/vmhwzqlg","slide":11,"text":"10 · 出缺席","textPreview":"10 · 出缺席","textChars":8,"textLines":1,"bbox":[68,40,620,25]}
+{"kind":"textbox","id":"sh/wnqx8vml","slide":11,"text":"出缺席頁適合快速處理跨班級點名","textPreview":"出缺席頁適合快速處理跨班級點名","textChars":15,"textLines":1,"bbox":[68,73,1050,54]}
+{"kind":"shape","id":"sh/hozy1036","slide":11,"bbox":[68,139,1144,2]}
+{"kind":"textbox","id":"sh/mxof2l4j","slide":11,"text":"11","textPreview":"11","textChars":2,"textLines":1,"bbox":[1160,45,52,24]}
+{"kind":"textbox","id":"sh/8j6x4bmp","slide":11,"text":"操作重點","textPreview":"操作重點","textChars":4,"textLines":1,"bbox":[900,178,260,34]}
+{"kind":"textbox","id":"sh/9kzexg3a","slide":11,"text":"選擇日期與班級\n\n預設全體出席\n\n只修改例外學生\n\n確認統計數字\n\n完成後進入今日課堂補進度","textPreview":"選擇日期與班級 |  | 預設全體出席 |  | 只修改例外學生 |  | 確認統計數字 |  | 完成後進入今日課堂補進度","textChars":46,"textLines":9,"bbox":[900,240,280,300]}
+{"kind":"textbox","id":"sh/qdsfe5k3","slide":11,"text":"補教紀錄 · Progress Hub","textPreview":"補教紀錄 · Progress Hub","textChars":19,"textLines":1,"bbox":[68,678,300,18]}
+{"kind":"image","id":"im/a90zyxo3","slide":11,"name":"","geometry":"roundRect","alt":"補教紀錄系統畫面：attendance.png","bbox":[70,170,780,445]}
+{"kind":"notes","id":"nt/8uh76i","slide":11,"text":""}
+{"kind":"slide","id":"sl/5msd6s","slide":12,"title":"11 · 系統治理","textShapes":7}
+{"kind":"textbox","id":"sh/wnad4rip","slide":12,"text":"11 · 系統治理","textPreview":"11 · 系統治理","textChars":9,"textLines":1,"bbox":[68,40,620,25]}
+{"kind":"textbox","id":"sh/vm1wbmh4","slide":12,"text":"帳號與角色權限屬於低頻管理工作","textPreview":"帳號與角色權限屬於低頻管理工作","textChars":15,"textLines":1,"bbox":[68,73,1050,54]}
+{"kind":"shape","id":"sh/alsv2h0z","slide":12,"bbox":[68,139,1144,2]}
+{"kind":"textbox","id":"sh/9kzu9cze","slide":12,"text":"12","textPreview":"12","textChars":2,"textLines":1,"bbox":[1160,45,52,24]}
+{"kind":"textbox","id":"sh/nyhc7218","slide":12,"text":"Owner／主任","textPreview":"Owner／主任","textChars":8,"textLines":1,"bbox":[880,182,250,34]}
+{"kind":"textbox","id":"sh/mx8vyh0n","slide":12,"text":"• 建立與停用帳號\n\n• 指派角色\n\n• 檢查功能權限\n\n• 保護最後一位 Owner\n\n• 依組織與班級限制資料範圍","textPreview":"• 建立與停用帳號 |  | • 指派角色 |  | • 檢查功能權限 |  | • 保護最後一位 Owner |  | • 依組織與班級限制資料範圍","textChars":59,"textLines":9,"bbox":[880,242,300,290]}
+{"kind":"textbox","id":"sh/lwzu5cj2","slide":12,"text":"正式版仍需 Supabase Auth + RLS，不能只靠畫面隱藏按鈕。","textPreview":"正式版仍需 Supabase Auth + RLS，不能只靠畫面隱藏按鈕。","textChars":37,"textLines":1,"bbox":[880,555,310,70]}
+{"kind":"textbox","id":"sh/0vqdw7ih","slide":12,"text":"補教紀錄 · Progress Hub","textPreview":"補教紀錄 · Progress Hub","textChars":19,"textLines":1,"bbox":[68,678,300,18]}
+{"kind":"image","id":"im/lszmdcz6","slide":12,"name":"","geometry":"roundRect","alt":"補教紀錄系統畫面：accounts.png","bbox":[70,170,760,430]}
+{"kind":"notes","id":"nt/5msd6s","slide":12,"text":""}
+{"kind":"slide","id":"sl/py5kso","slide":13,"title":"12 · 建議工作流程","textShapes":18}
+{"kind":"textbox","id":"sh/l0ruh43m","slide":13,"text":"12 · 建議工作流程","textPreview":"12 · 建議工作流程","textChars":11,"textLines":1,"bbox":[68,40,620,25]}
+{"kind":"textbox","id":"sh/yx0b6p4b","slide":13,"text":"日常操作以『今天要完成什麼』為順序","textPreview":"日常操作以『今天要完成什麼』為順序","textChars":17,"textLines":1,"bbox":[68,73,1050,54]}
+{"kind":"shape","id":"sh/zy9cfulw","slide":13,"bbox":[68,139,1144,2]}
+{"kind":"textbox","id":"sh/832tcz2d","slide":13,"text":"13","textPreview":"13","textChars":2,"textLines":1,"bbox":[1160,45,52,24]}
+{"kind":"shape","id":"sh/94bul43y","slide":13,"bbox":[88,182,52,52]}
+{"kind":"textbox","id":"sh/m1kbap47","slide":13,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[88,192,52,28]}
+{"kind":"textbox","id":"sh/72tcjuls","slide":13,"text":"進入課程班級","textPreview":"進入課程班級","textChars":6,"textLines":1,"bbox":[164,181,430,32]}
+{"kind":"textbox","id":"sh/o7yt0fm9","slide":13,"text":"選擇今天上課的班級與日期","textPreview":"選擇今天上課的班級與日期","textChars":12,"textLines":1,"bbox":[164,216,430,48]}
+{"kind":"shape","id":"sh/p87a903u","slide":13,"bbox":[88,286,52,52]}
+{"kind":"textbox","id":"sh/5o7axsza","slide":13,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[88,296,52,28]}
+{"kind":"textbox","id":"sh/4ny94nip","slide":13,"text":"完成點名","textPreview":"完成點名","textChars":4,"textLines":1,"bbox":[164,285,430,32]}
+{"kind":"textbox","id":"sh/325svih4","slide":13,"text":"預設出席，只修改遲到、請假與缺席","textPreview":"預設出席，只修改遲到、請假與缺席","textChars":16,"textLines":1,"bbox":[164,320,430,48]}
+{"kind":"shape","id":"sh/i1wr2d0j","slide":13,"bbox":[88,390,52,52]}
+{"kind":"textbox","id":"sh/ds7a1sz6","slide":13,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[88,400,52,28]}
+{"kind":"textbox","id":"sh/sryt87il","slide":13,"text":"登錄課堂進度","textPreview":"登錄課堂進度","textChars":6,"textLines":1,"bbox":[164,389,430,32]}
+{"kind":"textbox","id":"sh/rqpsz2h0","slide":13,"text":"每位學生依自己的教材版本更新","textPreview":"每位學生依自己的教材版本更新","textChars":14,"textLines":1,"bbox":[164,424,430,48]}
+{"kind":"shape","id":"sh/qpgb6x0v","slide":13,"bbox":[88,494,52,52]}
+{"kind":"textbox","id":"sh/1wra5czi","slide":13,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[88,504,52,28]}
+{"kind":"textbox","id":"sh/0vitc7ix","slide":13,"text":"補登考卷與評語","textPreview":"補登考卷與評語","textChars":7,"textLines":1,"bbox":[164,493,430,32]}
+{"kind":"textbox","id":"sh/kbalofa5","slide":13,"text":"額外考卷獨立記錄，不影響教材完成率","textPreview":"額外考卷獨立記錄，不影響教材完成率","textChars":17,"textLines":1,"bbox":[164,528,430,48]}
+{"kind":"shape","id":"sh/lcjmxkbq","slide":13,"bbox":[720,194,430,350]}
+{"kind":"textbox","id":"sh/y983m5sz","slide":13,"text":"完成後可追蹤","textPreview":"完成後可追蹤","textChars":6,"textLines":1,"bbox":[766,240,320,40]}
+{"kind":"textbox","id":"sh/jah4vatk","slide":13,"text":"學生個人課堂紀錄\n\n考試成績與修課進度\n\n班級與全校學習指標\n\n家長端可讀取的歷史資料","textPreview":"學生個人課堂紀錄 |  | 考試成績與修課進度 |  | 班級與全校學習指標 |  | 家長端可讀取的歷史資料","textChars":43,"textLines":7,"bbox":[766,318,330,210]}
+{"kind":"textbox","id":"sh/8falsfah","slide":13,"text":"補教紀錄 · Progress Hub","textPreview":"補教紀錄 · Progress Hub","textChars":19,"textLines":1,"bbox":[68,678,300,18]}
+{"kind":"notes","id":"nt/py5kso","slide":13,"text":""}
+{"kind":"slide","id":"sl/zhajnb","slide":14,"title":"13 · 現況與下一步","textShapes":9}
+{"kind":"textbox","id":"sh/lo7ulgzi","slide":14,"text":"13 · 現況與下一步","textPreview":"13 · 現況與下一步","textChars":11,"textLines":1,"bbox":[68,40,620,25]}
+{"kind":"textbox","id":"sh/y1gbql0r","slide":14,"text":"公開測試前，先清楚區分 Mock 與正式能力","textPreview":"公開測試前，先清楚區分 Mock 與正式能力","textChars":22,"textLines":1,"bbox":[68,73,1050,54]}
+{"kind":"shape","id":"sh/j2pcjqhc","slide":14,"bbox":[68,139,1144,2]}
+{"kind":"textbox","id":"sh/8ritwvy9","slide":14,"text":"14","textPreview":"14","textChars":2,"textLines":1,"bbox":[1160,45,52,24]}
+{"kind":"textbox","id":"sh/tsrup0ze","slide":14,"text":"目前可以測試","textPreview":"目前可以測試","textChars":6,"textLines":1,"bbox":[80,186,380,40]}
+{"kind":"textbox","id":"sh/6pgbul03","slide":14,"text":"介面操作流程\n角色切換與功能可見性\n學生、班級、教材與課堂流程\n假資料下的欄位與互動體驗","textPreview":"介面操作流程 | 角色切換與功能可見性 | 學生、班級、教材與課堂流程 | 假資料下的欄位與互動體驗","textChars":44,"textLines":4,"bbox":[80,252,450,230]}
+{"kind":"shape","id":"sh/7q9cnqho","slide":14,"bbox":[630,178,2,390]}
+{"kind":"textbox","id":"sh/ovetkrip","slide":14,"text":"尚未適合正式營運","textPreview":"尚未適合正式營運","textChars":8,"textLines":1,"bbox":[700,186,420,40]}
+{"kind":"textbox","id":"sh/9wnadwza","slide":14,"text":"真實帳號與登入安全\n真實學生個資\n多人同時修改與永久保存\n資料庫備份、稽核與 RLS","textPreview":"真實帳號與登入安全 | 真實學生個資 | 多人同時修改與永久保存 | 資料庫備份、稽核與 RLS","textChars":42,"textLines":4,"bbox":[700,252,430,230]}
+{"kind":"shape","id":"sh/10329wjm","slide":14,"bbox":[80,585,1070,64]}
+{"kind":"textbox","id":"sh/0zu1gr21","slide":14,"text":"下一步：確認操作流程 → 串接 Supabase Auth／PostgreSQL／RLS → 再部署公開測試。","textPreview":"下一步：確認操作流程 → 串接 Supabase Auth／PostgreSQL／RLS → 再部署公開測試。","textChars":55,"textLines":1,"bbox":[112,603,1010,30]}
+{"kind":"textbox","id":"sh/zyl07m1g","slide":14,"text":"補教紀錄 · Progress Hub","textPreview":"補教紀錄 · Progress Hub","textChars":19,"textLines":1,"bbox":[68,678,300,18]}
+{"kind":"notes","id":"nt/zhajnb","slide":14,"text":""}

@@ -12,8 +12,16 @@ const rlsMigration = readFileSync(
   resolve(migrationsDirectory, "202609160002_row_level_security.sql"),
   "utf8",
 );
+const platformMigration = readFileSync(
+  resolve(migrationsDirectory, "202609290001_platform_owner_read_access.sql"),
+  "utf8",
+);
 const ownerBootstrap = readFileSync(
   resolve(import.meta.dirname, "../supabase/bootstrap/initialize-first-owner.sql"),
+  "utf8",
+);
+const platformOwnerBootstrap = readFileSync(
+  resolve(import.meta.dirname, "../supabase/bootstrap/initialize-platform-owner.sql"),
   "utf8",
 );
 
@@ -104,5 +112,42 @@ describe("Supabase identity and RLS migrations", () => {
     expect(ownerBootstrap).toContain("account.bootstrap_owner");
     expect(ownerBootstrap).toContain("does not create an Auth user or store a password");
     expect(ownerBootstrap).not.toMatch(/secret[_ -]?key|sb_secret/i);
+  });
+
+  it("adds a separate append-only platform authorization model", () => {
+    for (const table of [
+      "platform_operators",
+      "platform_permissions",
+      "platform_role_permissions",
+      "platform_audit_logs",
+    ]) {
+      expect(platformMigration).toContain(`create table public.${table}`);
+      expect(platformMigration).toContain(`alter table public.${table} enable row level security;`);
+    }
+    expect(platformMigration).toContain("platform_audit_logs_reject_update_or_delete");
+    expect(platformMigration).not.toMatch(/grant\s+(insert|update|delete)[^;]*platform_/i);
+  });
+
+  it("grants platform operators tenant reads without tenant writes or self-promotion", () => {
+    expect(platformMigration).toContain("private.has_platform_permission");
+    expect(platformMigration).toContain("platform.tenant_data.read");
+    expect(platformMigration).toContain(
+      "or private.has_platform_permission('platform.tenant_data.read')",
+    );
+    expect(platformMigration).not.toMatch(/grant\s+(insert|update|delete)[^;]*platform_operators/i);
+    expect(platformMigration).not.toMatch(
+      /create policy[\s\S]+platform_operators[\s\S]+for insert/i,
+    );
+  });
+
+  it("bootstraps a verified platform owner without credentials or tenant membership", () => {
+    expect(platformOwnerBootstrap).toContain("from public.profiles p");
+    expect(platformOwnerBootstrap).toContain("join auth.users u");
+    expect(platformOwnerBootstrap).toContain("u.email_confirmed_at is not null");
+    expect(platformOwnerBootstrap).toContain(
+      "must not also have an active organization membership",
+    );
+    expect(platformOwnerBootstrap).toContain("on conflict (profile_id) do update");
+    expect(platformOwnerBootstrap).not.toMatch(/secret[_ -]?key|sb_secret|password\s*:=/i);
   });
 });

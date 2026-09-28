@@ -68,6 +68,7 @@ describe("Owner-provisioned authentication lifecycle", () => {
       (candidate) => candidate.email === "integration@learntrack.test",
     )!;
     const actor = await mockMembershipRepository.resolveByAuthUserId(profile.authUserId!);
+    if (actor?.actorType !== "organization") throw new Error("TEST_ORGANIZATION_ACTOR_MISSING");
     expect(actor?.scope).toEqual({ kind: "assigned-classes", classIds: ["cls-1"] });
 
     await requestSelfPasswordChange(actor!, "http://localhost:3000", providers);

@@ -1,5 +1,5 @@
 import "server-only";
-import type { AuthorizationContext } from "@/features/access-control/access-control.types";
+import type { AuthenticatedActor } from "@/features/access-control/access-control.types";
 import type { AuditEventView } from "@/features/audit-log/audit-log.types";
 
 export interface AuthIdentity {
@@ -67,7 +67,7 @@ export interface SessionProvider {
 }
 
 export interface MembershipRepository {
-  resolveByAuthUserId(authUserId: string): Promise<AuthorizationContext | null>;
+  resolveByAuthUserId(authUserId: string): Promise<AuthenticatedActor | null>;
   findAuthUserId(profileId: string): Promise<string | null>;
   linkAuthUser(profileId: string, authUserId: string): Promise<boolean>;
 }

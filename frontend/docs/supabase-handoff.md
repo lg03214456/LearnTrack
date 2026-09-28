@@ -126,3 +126,13 @@ RLS 先驗證 active organization membership；organization-wide 角色依 permi
 每日應到名單查詢以本地日期轉成 weekday，JOIN `classes → class_schedule_slots → active enrollments → students`，只取 `lifecycle_status = 'active'`，並以 `(class_id, student_id)` 去重。已存在的 `attendance_sessions`／`attendance_records` 不回寫，因此後續修改排課只影響未來查詢。
 
 RLS 必須先驗證 active organization membership。owner/admin 且具 `classes.manage` 可建立、修改、結業與封存；assigned teacher 只能讀取並修改 active 指派班級的允許欄位、排課及 enrollment，不能更換教師或改生命週期；其他角色唯讀或拒絕。所有 relationship policy 需透過 parent class 再驗證 organization，不能信任前端提交的 organization、role、teacher 或 revision。
+
+## Platform Owner 與多機構檢視
+
+依序套用 `202609160001_identity_membership_and_audit.sql`、`202609160002_row_level_security.sql`、`202609290001_platform_owner_read_access.sql`。Platform Owner 使用獨立的 `platform_operators`、`platform_permissions` 與 `platform_role_permissions`，不得同時持有 active organization membership；租戶 Owner 不會因此取得平台權限。
+
+建立方式：先在 Supabase Auth 建立並驗證 Email，再建立／連結 `profiles`，最後複製 `initialize-platform-owner.sql`、替換其中的 placeholder Email 後於 SQL Editor 執行。腳本不包含密碼或 service key，重跑會更新同一 profile 的 operator 狀態。完成後應查核三項 platform permission 均存在。
+
+平台只能列出 active organization，選定明確 organization ID 後唯讀檢視。RLS 只把 `platform.tenant_data.read` 加入 tenant SELECT policy；既有 INSERT／UPDATE policy 不含平台分支。每次進入或拒絕檢視均寫入 append-only `platform_audit_logs`。Browser 顯示的 organization 名稱一律重新由資料庫 ID 查得，不能信任 URL label 或 local storage。
+
+回滾時先停用 `platform_operators.status`，確認無平台 session，再移除新增的 platform SELECT policies／函式／四張 platform tables；不可刪除 tenant schema 或 tenant audit。驗證至少準備 A、B 兩個機構：租戶 A 不得讀 B；Platform Owner 可讀 A、B 但所有 mutation 均拒絕；anonymous 全部拒絕；稽核需記錄每次目標切換。

@@ -1,9 +1,31 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { mockAuthStore, mockMembershipRepository, mockSessionProvider } from "./mock-providers";
-import { resolveSessionIdentity } from "./identity-core";
+import { buildPlatformActor, resolveSessionIdentity } from "./identity-core";
 
 describe("session identity resolution", () => {
   beforeEach(() => mockAuthStore.reset());
+
+  it("builds only active explicitly assigned Platform Owners", () => {
+    const profile = { id: "platform-1", displayName: "平台管理者", email: "platform@test" };
+    expect(
+      buildPlatformActor({
+        profile,
+        operator: { roleCode: "platform-owner", status: "active" },
+        permissionCodes: ["platform.organizations.read", "students.manage"],
+      }),
+    ).toMatchObject({
+      actorType: "platform",
+      permissions: ["platform.organizations.read"],
+    });
+    expect(
+      buildPlatformActor({
+        profile,
+        operator: { roleCode: "platform-owner", status: "inactive" },
+        permissionCodes: ["platform.organizations.read"],
+      }),
+    ).toBeNull();
+    expect(buildPlatformActor({ profile, operator: null, permissionCodes: [] })).toBeNull();
+  });
 
   it("fails closed without a session instead of returning Owner", async () => {
     await expect(

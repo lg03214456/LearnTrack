@@ -15,8 +15,11 @@ export function ForgotPasswordForm() {
   useEffect(() => {
     if (!state.cooldownSeconds) return;
     const now = Date.now();
-    setCurrentTime(now);
-    setCooldownUntil(now + state.cooldownSeconds * 1000);
+    const timer = window.setTimeout(() => {
+      setCurrentTime(now);
+      setCooldownUntil(now + state.cooldownSeconds! * 1000);
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [state.cooldownSeconds]);
 
   useEffect(() => {

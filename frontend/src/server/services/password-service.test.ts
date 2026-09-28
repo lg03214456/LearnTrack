@@ -42,7 +42,7 @@ describe("password recovery", () => {
 
   it("sends one account-bound self-change link", async () => {
     const actor = await mockMembershipRepository.resolveByAuthUserId("mock-auth-owner");
-    if (!actor) throw new Error("TEST_ACTOR_MISSING");
+    if (actor?.actorType !== "organization") throw new Error("TEST_ACTOR_MISSING");
     await expect(
       requestSelfPasswordChange(actor, "http://localhost:3000", providers),
     ).resolves.toMatchObject({ ok: true });

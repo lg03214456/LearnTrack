@@ -17,6 +17,7 @@ import {
   type AuthorizationContext,
   type PermissionCode,
 } from "@/features/access-control/access-control.types";
+import { buildPlatformActor } from "./identity-core";
 
 const clientOptions = {
   auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false },
@@ -189,6 +190,30 @@ export const supabaseMembershipRepository: MembershipRepository = {
       .eq("auth_user_id", authUserId)
       .maybeSingle();
     if (profileError || !profile) return null;
+    const { data: platformOperator, error: platformError } = await client
+      .from("platform_operators")
+      .select("role_code, status")
+      .eq("profile_id", profile.id)
+      .maybeSingle();
+    if (platformError) return null;
+    if (platformOperator) {
+      if (platformOperator.status !== "active" || platformOperator.role_code !== "platform-owner")
+        return null;
+      const { data: platformAssignments, error: platformAssignmentsError } = await client
+        .from("platform_role_permissions")
+        .select("permission_code")
+        .eq("role_code", platformOperator.role_code);
+      if (platformAssignmentsError || !platformAssignments?.length) return null;
+      return buildPlatformActor({
+        profile: {
+          id: profile.id,
+          displayName: profile.display_name,
+          email: profile.login_email ?? "",
+        },
+        operator: { roleCode: platformOperator.role_code, status: platformOperator.status },
+        permissionCodes: platformAssignments.map((assignment) => assignment.permission_code),
+      });
+    }
     const { data: memberships, error: membershipError } = await client
       .from("organization_memberships")
       .select("id, organization_id")
@@ -229,6 +254,7 @@ export const supabaseMembershipRepository: MembershipRepository = {
     if (permissions.length === 0) return null;
     const primaryRole = roles[0];
     const actor: AuthorizationContext = {
+      actorType: "organization",
       profileId: profile.id,
       membershipId: membership.id,
       organizationId: membership.organization_id,

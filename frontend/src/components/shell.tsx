@@ -100,10 +100,12 @@ function NavigationGroup({
 export function Shell({
   children,
   actor,
+  organizationName,
   isMockMode,
 }: {
   children: React.ReactNode;
   actor: AuthorizationContext;
+  organizationName: string;
   isMockMode: boolean;
 }) {
   const path = usePathname(),
@@ -144,7 +146,7 @@ export function Shell({
               <GraduationCap />
             </span>
             <div>
-              <b>補教紀錄</b>
+              <b>{organizationName}</b>
               <small className="block text-[10px] tracking-wide text-slate-500">PROGRESS HUB</small>
             </div>
           </Link>

@@ -10,6 +10,7 @@ import {
 } from "./curriculum-core";
 
 const owner: AuthorizationContext = {
+  actorType: "organization",
   profileId: "owner",
   membershipId: "m",
   organizationId: ORG,

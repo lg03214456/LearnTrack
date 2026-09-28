@@ -3,7 +3,11 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { AuthenticationResult } from "@/features/authentication/authentication.types";
-import { getAuthorizationContext, SESSION_COOKIE } from "@/server/auth/identity";
+import {
+  getAuthenticatedActor,
+  getAuthorizationContext,
+  SESSION_COOKIE,
+} from "@/server/auth/identity";
 import { getAuthProviders } from "@/server/auth/providers";
 import { authenticateAccount } from "@/server/services/authentication-service";
 import {
@@ -42,8 +46,9 @@ export async function loginAction(
     providers,
   );
   await appendAuditEvent(providers.audit, {
-    actor: result.ok ? (targetActor ?? undefined) : undefined,
-    organizationId: targetActor?.organizationId ?? "authentication",
+    actor: result.ok && targetActor?.actorType === "organization" ? targetActor : undefined,
+    organizationId:
+      targetActor?.actorType === "organization" ? targetActor.organizationId : "authentication",
     action: "auth.login",
     resourceType: "session",
     resourceId: targetActor?.profileId,
@@ -59,15 +64,17 @@ export async function loginAction(
     path: "/",
     expires: new Date(result.expiresAt),
   });
-  redirect(result.redirectTo ?? "/students");
+  redirect(
+    targetActor?.actorType === "platform" ? "/platform" : (result.redirectTo ?? "/students"),
+  );
 }
 
 export async function logoutAction() {
   const cookieStore = await cookies();
   const sessionId = cookieStore.get(SESSION_COOKIE)?.value;
-  const actor = await getAuthorizationContext().catch(() => null);
+  const actor = await getAuthenticatedActor().catch(() => null);
   const providers = getAuthProviders();
-  if (sessionId && actor)
+  if (sessionId && actor?.actorType === "organization") {
     await executeAuditedCommit({
       repository: providers.audit,
       event: {
@@ -79,6 +86,9 @@ export async function logoutAction() {
       },
       commit: () => providers.sessions.revoke(sessionId),
     });
+  } else if (sessionId) {
+    await providers.sessions.revoke(sessionId);
+  }
   cookieStore.delete(SESSION_COOKIE);
   redirect("/login?reason=logged-out");
 }
@@ -107,7 +117,8 @@ export async function forgotPasswordAction(
       : null;
     const result = await requestPasswordRecovery(email, origin, providers);
     await appendAuditEvent(providers.audit, {
-      organizationId: targetActor?.organizationId ?? "authentication",
+      organizationId:
+        targetActor?.actorType === "organization" ? targetActor.organizationId : "authentication",
       action: "password.reset_requested",
       resourceType: "account",
       resourceId: targetActor?.profileId,
@@ -143,8 +154,9 @@ export async function resetPasswordAction(
       providers,
     );
     await appendAuditEvent(providers.audit, {
-      actor: targetActor ?? undefined,
-      organizationId: targetActor?.organizationId ?? "authentication",
+      actor: targetActor?.actorType === "organization" ? targetActor : undefined,
+      organizationId:
+        targetActor?.actorType === "organization" ? targetActor.organizationId : "authentication",
       action: "password.changed",
       resourceType: "account",
       resourceId: targetActor?.profileId,

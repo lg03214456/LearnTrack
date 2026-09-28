@@ -17,6 +17,7 @@ vi.mock("@/app/actions/authentication-actions", () => ({
 afterEach(cleanup);
 
 const actor: AuthorizationContext = {
+  actorType: "organization",
   profileId: "owner",
   membershipId: "membership-1",
   organizationId: "organization-1",
@@ -32,7 +33,7 @@ const actor: AuthorizationContext = {
 describe("Shell", () => {
   it("uses the student directory as the primary navigation entry", () => {
     render(
-      <Shell actor={actor} isMockMode>
+      <Shell actor={actor} organizationName="晨星文理補習班" isMockMode>
         內容
       </Shell>,
     );
@@ -41,6 +42,7 @@ describe("Shell", () => {
       "href",
       "/students",
     );
+    expect(screen.getByText("晨星文理補習班")).toBeInTheDocument();
 
     const teachingNavigation = screen.getByText("教學功能").nextElementSibling;
     const links = Array.from(teachingNavigation?.querySelectorAll("a") ?? []);
@@ -53,7 +55,7 @@ describe("Shell", () => {
 
   it("does not expose Mock controls in production mode", () => {
     render(
-      <Shell actor={actor} isMockMode={false}>
+      <Shell actor={actor} organizationName="晨星文理補習班" isMockMode={false}>
         內容
       </Shell>,
     );

@@ -25,6 +25,12 @@ export const permissionCodes = [
   "audit.read",
 ] as const;
 export type PermissionCode = (typeof permissionCodes)[number];
+export const platformPermissionCodes = [
+  "platform.organizations.read",
+  "platform.tenant_data.read",
+  "platform.audit.read",
+] as const;
+export type PlatformPermissionCode = (typeof platformPermissionCodes)[number];
 export type AccountStatus = "active" | "inactive";
 export type DataScope =
   | { kind: "organization-wide" }
@@ -40,7 +46,8 @@ export interface PersonaExperience {
   recommendedLabel: string;
   primaryOperations: string[];
 }
-export interface AuthorizationContext {
+export interface OrganizationAuthorizationContext {
+  actorType: "organization";
   profileId: string;
   membershipId: string;
   organizationId: string;
@@ -52,6 +59,17 @@ export interface AuthorizationContext {
   permissions: PermissionCode[];
   scope: DataScope;
 }
+export interface PlatformAuthorizationContext {
+  actorType: "platform";
+  profileId: string;
+  name: string;
+  email: string;
+  platformRole: "platform-owner";
+  status: AccountStatus;
+  permissions: PlatformPermissionCode[];
+}
+export type AuthorizationContext = OrganizationAuthorizationContext;
+export type AuthenticatedActor = OrganizationAuthorizationContext | PlatformAuthorizationContext;
 export interface RoleView {
   id: string;
   name: string;

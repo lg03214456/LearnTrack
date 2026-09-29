@@ -22,14 +22,14 @@
 
 - [ ] 4.1 Add organization-context repository tests for membership-derived names, platform target resolution, inactive/missing organizations, rename freshness, and forged-label rejection; verify focused tests fail before implementation
 - [x] 4.2 Implement trusted organization summary resolution for organization actors and explicitly selected Platform Owner targets; verify repository and authorization tests pass
-- [ ] 4.3 Update the authenticated shell and landing experience to display the organization name, `LearnTrack 平台管理` without a platform selection, and a persistent platform inspection indicator after selection; verify component and accessibility tests cover each state
+- [x] 4.3 Update the authenticated shell and landing experience to display the organization name, `LearnTrack 平台管理` without a platform selection, and a persistent platform inspection indicator after selection; verify component and accessibility tests cover each state
 
 ## 5. Platform Workspace and Safe Reads
 
 - [ ] 5.1 Add route tests proving organization users cannot open platform routes, Platform Owners can list active organizations, and no selection exposes tenant data; verify focused route tests fail before implementation
 - [x] 5.2 Implement the platform organization list and server-validated selection flow using immutable organization IDs; verify URL labels, local storage, and unsigned values cannot determine authoritative organization context
-- [ ] 5.3 Add explicit target-organization read adapters only for Supabase-backed business data and fail closed for remaining Mock-only features; verify missing targets and unsupported repositories return denial rather than unscoped data
-- [ ] 5.4 Add tests for switching from organization A to B without retaining A data and for auditing each platform tenant inspection; verify route/repository integration tests pass
+- [x] 5.3 Add explicit target-organization read adapters only for Supabase-backed business data and fail closed for remaining Mock-only features; verify missing targets and unsupported repositories return denial rather than unscoped data
+- [x] 5.4 Add tests for switching from organization A to B without retaining A data and for auditing each platform tenant inspection; verify route/repository integration tests pass
 
 ## 6. Documentation and Completion
 

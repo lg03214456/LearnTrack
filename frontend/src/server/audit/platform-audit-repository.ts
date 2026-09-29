@@ -35,3 +35,9 @@ export async function appendPlatformAuditEvent(input: {
     });
   if (error) throw new Error("PLATFORM_AUDIT_WRITE_FAILED");
 }
+
+export const platformInspectionAudit = {
+  async append(input: Parameters<typeof appendPlatformAuditEvent>[0]) {
+    await appendPlatformAuditEvent(input);
+  },
+};

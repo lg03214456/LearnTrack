@@ -22,18 +22,25 @@ export function authoritativeOrganizationId(
   return requested || null;
 }
 
-function organizationClient() {
+function organizationClient(accessToken?: string) {
   const { url } = getSupabasePublicConfig();
-  const key = process.env.SUPABASE_SECRET_KEY?.trim();
+  const key = accessToken
+    ? getSupabasePublicConfig().publishableKey
+    : process.env.SUPABASE_SECRET_KEY?.trim();
   if (!key) throw new Error("AUTH_CONFIGURATION_INVALID");
-  return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
+  return createClient(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false },
+    global: accessToken ? { headers: { Authorization: `Bearer ${accessToken}` } } : undefined,
+  });
 }
 
 export async function listActiveOrganizations(
   actor: AuthenticatedActor,
+  accessToken = "",
 ): Promise<OrganizationSummary[]> {
   if (!canPlatform(actor, "platform.organizations.read")) throw new Error("FORBIDDEN");
-  const { data, error } = await organizationClient()
+  if (!accessToken.trim()) throw new Error("UNAUTHORIZED");
+  const { data, error } = await organizationClient(accessToken)
     .from("organizations")
     .select("id, name, status")
     .eq("status", "active")

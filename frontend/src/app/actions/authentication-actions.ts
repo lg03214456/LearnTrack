@@ -16,6 +16,7 @@ import {
   requestSelfPasswordChange,
 } from "@/server/services/password-service";
 import { appendAuditEvent, executeAuditedCommit } from "@/server/audit/audit-service";
+import { appendAuthenticationAuditEvent } from "@/server/audit/authentication-audit";
 import { startPasswordEmailCooldown } from "@/server/auth/password-email-cooldown";
 
 export async function loginAction(
@@ -37,7 +38,6 @@ export async function loginAction(
   const targetActor = targetIdentity
     ? await providers.memberships.resolveByAuthUserId(targetIdentity.authUserId)
     : null;
-  await providers.audit.assertWritable();
   const result = await authenticateAccount(
     {
       email,
@@ -45,13 +45,12 @@ export async function loginAction(
     },
     providers,
   );
-  await appendAuditEvent(providers.audit, {
-    actor: result.ok && targetActor?.actorType === "organization" ? targetActor : undefined,
-    organizationId:
-      targetActor?.actorType === "organization" ? targetActor.organizationId : "authentication",
+  await appendAuthenticationAuditEvent({
+    repository: providers.audit,
+    targetActor,
+    attributeOrganizationActor: result.ok,
     action: "auth.login",
     resourceType: "session",
-    resourceId: targetActor?.profileId,
     result: result.ok ? "succeeded" : "denied",
     metadata: result.ok ? {} : { reasonCode: result.code },
   });
@@ -101,7 +100,6 @@ export async function forgotPasswordAction(
     const requestHeaders = await headers();
     const origin = requestHeaders.get("origin") ?? "http://localhost:3000";
     const providers = getAuthProviders();
-    await providers.audit.assertWritable();
     const email = String(formData.get("email") ?? "");
     const cooldown = startPasswordEmailCooldown(email);
     if (!cooldown.allowed)
@@ -116,12 +114,11 @@ export async function forgotPasswordAction(
       ? await providers.memberships.resolveByAuthUserId(identity.authUserId)
       : null;
     const result = await requestPasswordRecovery(email, origin, providers);
-    await appendAuditEvent(providers.audit, {
-      organizationId:
-        targetActor?.actorType === "organization" ? targetActor.organizationId : "authentication",
+    await appendAuthenticationAuditEvent({
+      repository: providers.audit,
+      targetActor,
       action: "password.reset_requested",
       resourceType: "account",
-      resourceId: targetActor?.profileId,
       result: "succeeded",
     });
     return { ...result, cooldownSeconds: cooldown.retryAfterSeconds };
@@ -144,7 +141,6 @@ export async function resetPasswordAction(
   let result: AuthenticationResult;
   try {
     const providers = getAuthProviders();
-    await providers.audit.assertWritable();
     const link = await providers.passwordLinks.find(String(formData.get("token") ?? ""));
     const targetActor = link
       ? await providers.memberships.resolveByAuthUserId(link.authUserId)
@@ -153,13 +149,12 @@ export async function resetPasswordAction(
       { token: String(formData.get("token") ?? ""), password },
       providers,
     );
-    await appendAuditEvent(providers.audit, {
-      actor: targetActor?.actorType === "organization" ? targetActor : undefined,
-      organizationId:
-        targetActor?.actorType === "organization" ? targetActor.organizationId : "authentication",
+    await appendAuthenticationAuditEvent({
+      repository: providers.audit,
+      targetActor,
+      attributeOrganizationActor: true,
       action: "password.changed",
       resourceType: "account",
-      resourceId: targetActor?.profileId,
       result: result.ok ? "succeeded" : "denied",
       metadata: result.ok ? {} : { reasonCode: result.code },
     });

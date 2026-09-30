@@ -6,7 +6,7 @@ Supabase Auth 與 Email adapters 已完成；membership/audit schema 與 RLS mig
 
 登入、Email 與 Audit 的環境變數、Redirect URL、Secret 與切換矩陣，請先閱讀 [`../../docs/supabase-auth-audit-handoff.md`](../../docs/supabase-auth-audit-handoff.md)。
 
-目前 Auth 與 Email 已可使用 Supabase：公開設定統一使用 `NEXT_PUBLIC_SUPABASE_URL` 與 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`，Server 管理操作使用 `SUPABASE_SECRET_KEY`，密碼 callback 使用 `AUTH_SITE_URL`。SMTP sender 與憑證由 Supabase Dashboard 管理。啟用 Supabase Auth 時，登入後會由 `profiles`、active membership、role 與 permission 表解析 organization-wide Owner；啟用 PostgreSQL Audit 時，操作紀錄會改寫入 `audit_logs`。老師、學生與聯絡人的 relationship-scoped 資料仍由 Mock repository 提供，因此在這些 repository 完成 Supabase migration 前會安全地拒絕登入，不會誤給全機構資料權限。
+目前 Auth 與 Email 已可使用 Supabase：公開設定統一使用 `NEXT_PUBLIC_SUPABASE_URL` 與 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`，Server 管理操作使用 `SUPABASE_SECRET_KEY`，密碼 callback 使用 `AUTH_SITE_URL`。SMTP sender 與憑證由 Supabase Dashboard 管理。啟用 Supabase Auth 時，登入後會由 `profiles`、active membership、role 與 permission 表解析 organization-wide Owner；啟用 PostgreSQL Audit 時，機構身分的認證操作寫入 `audit_logs`，Platform Owner 的認證操作寫入 `platform_audit_logs`，不得以假的 organization ID 混入 tenant audit。老師、學生與聯絡人的 relationship-scoped 資料仍由 Mock repository 提供，因此在這些 repository 完成 Supabase migration 前會安全地拒絕登入，不會誤給全機構資料權限。
 
 ## PostgreSQL 資料表
 

@@ -3,9 +3,14 @@ import "server-only";
 import { createClient } from "@supabase/supabase-js";
 import type { PlatformAuthorizationContext } from "@/features/access-control/access-control.types";
 import { getSupabasePublicConfig } from "@/lib/supabase/public-config";
+import { safeAuditMetadata } from "./audit-service";
 
 export type PlatformAuditAction =
-  "platform.organization.inspect" | "platform.organization.inspect_denied";
+  | "platform.organization.inspect"
+  | "platform.organization.inspect_denied"
+  | "platform.auth.login"
+  | "platform.password.reset_requested"
+  | "platform.password.changed";
 
 function client() {
   const { url } = getSupabasePublicConfig();
@@ -19,7 +24,10 @@ export async function appendPlatformAuditEvent(input: {
   targetOrganizationId?: string;
   action: PlatformAuditAction;
   result: "succeeded" | "denied" | "failed";
+  resourceType?: string;
+  resourceId?: string;
   requestId?: string;
+  metadata?: Record<string, unknown>;
 }) {
   const { error } = await client()
     .from("platform_audit_logs")
@@ -27,11 +35,11 @@ export async function appendPlatformAuditEvent(input: {
       operator_profile_id: input.actor.profileId,
       target_organization_id: input.targetOrganizationId || null,
       action: input.action,
-      resource_type: "organization",
-      resource_id: input.targetOrganizationId || null,
+      resource_type: input.resourceType || "organization",
+      resource_id: input.resourceId || input.targetOrganizationId || null,
       result: input.result,
       request_id: input.requestId || null,
-      metadata: {},
+      metadata: safeAuditMetadata(input.metadata ?? {}),
     });
   if (error) throw new Error("PLATFORM_AUDIT_WRITE_FAILED");
 }

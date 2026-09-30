@@ -15,28 +15,46 @@ export function SupabaseResetPasswordForm() {
   useEffect(() => {
     const client = getSupabaseBrowserClient();
     const initializeRecovery = async () => {
+      const query = new URLSearchParams(window.location.search);
+      const code = query.get("code");
       const fragment = new URLSearchParams(window.location.hash.slice(1));
       const accessToken = fragment.get("access_token");
       const refreshToken = fragment.get("refresh_token");
+      let hasRecoverySession = false;
 
-      if (accessToken && refreshToken) {
-        const { error } = await client.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
-        if (error) {
+      if (code) {
+        const { data, error } = await client.auth.exchangeCodeForSession(code);
+        if (error || !data.session) {
           setRecoveryState("invalid");
           return;
         }
+        hasRecoverySession = true;
+        query.delete("code");
+      } else if (accessToken && refreshToken) {
+        const { data, error } = await client.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        if (error || !data.session) {
+          setRecoveryState("invalid");
+          return;
+        }
+        hasRecoverySession = true;
+      }
+
+      if (hasRecoverySession) {
+        const remainingQuery = query.toString();
         window.history.replaceState(
           null,
           "",
-          `${window.location.pathname}${window.location.search}`,
+          `${window.location.pathname}${remainingQuery ? `?${remainingQuery}` : ""}`,
         );
+        setRecoveryState("ready");
+        return;
       }
 
-      const { data } = await client.auth.getSession();
-      setRecoveryState(data.session ? "ready" : "invalid");
+      const { data, error } = await client.auth.getSession();
+      setRecoveryState(!error && data.session ? "ready" : "invalid");
     };
 
     void initializeRecovery();

@@ -9,6 +9,8 @@ export function getSupabaseBrowserClient(): SupabaseClient {
   if (browserClient) return browserClient;
 
   const { url, publishableKey } = getSupabasePublicConfig();
-  browserClient = createClient(url, publishableKey);
+  browserClient = createClient(url, publishableKey, {
+    auth: { detectSessionInUrl: false },
+  });
   return browserClient;
 }

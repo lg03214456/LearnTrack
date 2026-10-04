@@ -6,8 +6,8 @@ export function buildAttendanceDayView(
   existingRows: AttendanceRow[],
   classId?: string,
 ): AttendanceDayView {
-  const selected = classId ? expected.filter((row) => row.classId === classId) : expected;
-  const rows = selected
+  const selectedClasses = classId ? expected.filter((row) => row.classId === classId) : expected;
+  const rows = selectedClasses
     .flatMap((row) => row.students)
     .filter(
       (student, index, array) =>

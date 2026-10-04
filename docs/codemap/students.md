@@ -16,8 +16,8 @@
 | 學生名單查詢型別與 UI | `frontend/src/features/students/` |
 | 學生新增／名單設定 UI | `frontend/src/features/students/components/student-roster-editor.tsx` |
 | 學生封存／恢復 UI | `frontend/src/features/students/components/student-lifecycle-control.tsx` |
-| 學生新增、主檔、狀態與班級歸屬寫入 | `frontend/src/app/actions/student-roster-actions.ts`、`frontend/src/server/services/student-roster-service.ts` |
-| 組織／班級／搜尋／狀態查詢 | `frontend/src/server/repositories/student-roster.ts`、`student-roster-core.ts` |
+| 學生新增、主檔、狀態與班級歸屬寫入 | `frontend/src/app/actions/student-roster-actions.ts`、`frontend/src/server/services/student-roster-service.ts`、`frontend/src/server/repositories/student-roster-mutations.ts` |
+| 組織／班級／搜尋／狀態查詢 | `frontend/src/server/repositories/student-roster.ts`、`student-roster-core.ts`、`student-roster-supabase.ts` |
 | 個人頁 Client-safe contracts | `frontend/src/features/student-profile/student-profile.types.ts` |
 | 個人摘要／聯絡資料／考試紀錄 UI | `frontend/src/features/student-profile/components/student-profile-hero.tsx`、`student-profile-contact.tsx`、`student-assessment-history.tsx` |
 | 個人頁查詢與轉換 | `frontend/src/server/repositories/student-detail.ts`、`student-detail-core.ts` |
@@ -26,7 +26,7 @@
 | 課堂進度／考卷成績 CSV 匯出 | `frontend/src/features/student-profile/components/student-report-downloads.tsx`、`student-report-export.ts` |
 | 學生與課堂紀錄假資料 | `frontend/src/server/data/mock/student-profile.ts` |
 | 班級今日課堂產生的課堂進度歷史 | `frontend/src/server/data/mock/class-sessions.ts`，由 `student-detail.ts` 合併至個人課堂紀錄 |
-| 共用學生、班級、進度假資料 | `frontend/src/server/data/mock/fixtures.ts`、`relations.ts` |
+| 共用學生、班級、進度假資料 | `frontend/src/server/data/mock/fixtures.ts`、`relations.ts`；只供 Mock provider／測試使用 |
 
 學生與班級是多對多關係。`students` 不保存單一 `className`；班級名單由 `enrollments` 的 `studentId` 與 `classId` 組合。總名單同一學生只出現一次，但可以顯示多個班級標籤。
 

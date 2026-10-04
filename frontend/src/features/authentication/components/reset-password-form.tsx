@@ -7,9 +7,9 @@ import type { AuthenticationResult } from "../authentication.types";
 
 const initialState: AuthenticationResult = { ok: false, code: "OK", message: "" };
 
-export function ResetPasswordForm({ token, valid }: { token: string; valid: boolean }) {
+export function ResetPasswordForm({ token, isValid }: { token: string; isValid: boolean }) {
   const [state, formAction, pending] = useActionState(resetPasswordAction, initialState);
-  if (!valid)
+  if (!isValid)
     return (
       <div className="mt-6 space-y-4">
         <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">

@@ -11,20 +11,38 @@ export function ClassBasicFields({
   fieldErrors?: ClassCommandResult["fieldErrors"];
 }) {
   return (
-    <Card className="p-5">
+    <Card className="min-w-0 p-4 sm:p-5">
       <h2 className="text-lg font-bold">班級基本資料</h2>
       <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <label className="text-sm">
+        <label className="min-w-0 text-sm">
           班級名稱
           <input name="name" required defaultValue={values.name} className="input mt-1 w-full" />
           <small className="text-red-600">{fieldErrors?.name}</small>
         </label>
-        <label className="text-sm">
+        <label className="min-w-0 text-sm">
           班級代碼
-          <input name="code" required defaultValue={values.code} className="input mt-1 w-full" />
+          {view.mode === "create" ? (
+            <input
+              disabled
+              value="儲存後自動產生"
+              className="input mt-1 w-full bg-slate-50 text-slate-500"
+            />
+          ) : (
+            <input
+              name="code"
+              readOnly
+              value={values.code}
+              className="input mt-1 w-full bg-slate-50 text-slate-600"
+            />
+          )}
+          {view.mode === "create" && (
+            <small className="mt-1 block text-slate-500">
+              單科依科目前綴產生，多科目使用 MIX；建立後不再變更。
+            </small>
+          )}
           <small className="text-red-600">{fieldErrors?.code}</small>
         </label>
-        <label className="text-sm">
+        <label className="min-w-0 text-sm">
           班級類型
           <select name="type" defaultValue={values.type} className="input mt-1 w-full">
             <option value="progress">進度授課班</option>
@@ -32,7 +50,7 @@ export function ClassBasicFields({
             <option value="study">自習加強班</option>
           </select>
         </label>
-        <label className="text-sm">
+        <label className="min-w-0 text-sm">
           授課教師
           <select
             name="teacherId"
@@ -52,7 +70,7 @@ export function ClassBasicFields({
           )}
           <small className="text-red-600">{fieldErrors?.teacherId}</small>
         </label>
-        <label className="text-sm">
+        <label className="min-w-0 text-sm">
           容納人數上限
           <input
             name="capacity"
@@ -64,7 +82,7 @@ export function ClassBasicFields({
           />
           <small className="text-red-600">{fieldErrors?.capacity}</small>
         </label>
-        <label className="text-sm">
+        <label className="min-w-0 text-sm">
           狀態
           <select
             name="status"
@@ -86,7 +104,7 @@ export function ClassBasicFields({
         <legend className="font-bold">主要科目（可複選）</legend>
         <div className="mt-2 flex flex-wrap gap-3">
           {view.subjectOptions.map((option) => (
-            <label key={option.id} className="rounded-lg border px-3 py-2 text-sm">
+            <label key={option.id} className="min-w-0 rounded-lg border px-3 py-2 text-sm">
               <input
                 type="checkbox"
                 name="subjectIds"

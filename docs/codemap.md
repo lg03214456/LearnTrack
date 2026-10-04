@@ -39,6 +39,7 @@ LearnTrack/
 | Loading／Error 畫面 | `frontend/src/app/(dashboard)/loading.tsx`、`error.tsx` |
 | 共用 Domain／View Model | `frontend/src/server/domain/types.ts` |
 | Dashboard 與學習指標查詢 | `frontend/src/server/repositories/dashboard.ts` |
+| 學習進度與分析 View Model | `frontend/src/features/progress/progress.types.ts`、`frontend/src/features/analytics/analytics.types.ts` |
 | Supabase 串接策略 | `frontend/docs/supabase-handoff.md` |
 
 ## 新功能放置原則

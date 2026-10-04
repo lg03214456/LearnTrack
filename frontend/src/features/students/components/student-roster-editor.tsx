@@ -28,6 +28,7 @@ function initialState(row?: StudentListRow): StudentRosterCommandResult {
     values: row
       ? {
           studentId: row.id,
+          revision: row.revision,
           number: row.number,
           name: row.name,
           gender: row.gender,
@@ -108,7 +109,10 @@ export function StudentRosterEditor({
               </div>
               <form action={action} className="flex min-h-0 flex-1 flex-col">
                 {values.studentId && (
-                  <input type="hidden" name="studentId" value={values.studentId} />
+                  <>
+                    <input type="hidden" name="studentId" value={values.studentId} />
+                    <input type="hidden" name="revision" value={values.revision} />
+                  </>
                 )}
                 <input
                   type="hidden"
@@ -135,14 +139,12 @@ export function StudentRosterEditor({
                       )}
                     </label>
                     <label className="text-sm font-medium text-slate-700">
-                      學號{" "}
-                      <span className="text-red-500" aria-hidden="true">
-                        *
-                      </span>
+                      學號
                       <input
-                        className="input mt-1.5 w-full"
+                        className="input mt-1.5 w-full bg-slate-50 text-slate-500"
                         name="number"
-                        required
+                        readOnly
+                        placeholder="儲存後自動產生學號"
                         defaultValue={values.number}
                       />
                       {state.fieldErrors?.number && (

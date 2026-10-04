@@ -21,8 +21,11 @@ Keep changes easy to locate, test, and replace without loading every project rul
 
 ## Non-negotiable boundaries
 
-- UI pages and components do not import mock data, server actions, or storage clients directly.
-- Pages read and write through the feature repository interface; providers choose the implementation.
+- UI pages and components do not import mock data, services, repositories, or storage clients directly.
+- Client components may invoke typed Next.js Server Actions as their mutation boundary, but never import
+  the Action's server-only dependencies.
+- Pages read through the feature repository interface; mutations cross a typed Server Action and service
+  boundary. Providers choose the persistence implementation.
 - Browser code never imports server-only modules.
 - Authorization is enforced in the data or server boundary, not only by hiding UI controls.
 - Keep unrelated user changes intact.

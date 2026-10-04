@@ -15,6 +15,7 @@ export interface StudentListRow {
   archivedAt?: string;
   archivedBy?: string;
   archiveReason?: string;
+  revision?: number;
   classes: ClassMembership[];
 }
 export interface StudentClassOption {
@@ -52,6 +53,7 @@ export interface StudentListResult {
 
 export interface StudentRosterInput {
   studentId?: string;
+  revision?: number;
   number: string;
   name: string;
   gender: "男" | "女";
@@ -64,7 +66,7 @@ export interface StudentLifecycleCommandResult {
   ok: boolean;
   code: "OK" | "VALIDATION_ERROR" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT";
   message: string;
-  values: { studentId: string; intent: "archive" | "restore"; reason: string };
+  values: { studentId: string; revision?: number; intent: "archive" | "restore"; reason: string };
   fieldErrors?: { reason?: string };
 }
 

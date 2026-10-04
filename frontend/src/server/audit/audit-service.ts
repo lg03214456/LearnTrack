@@ -5,16 +5,17 @@ import type { AuditResult } from "@/features/audit-log/audit-log.types";
 import type { AuditRepository } from "@/server/auth/contracts";
 import { safeAuditMetadataKeys, type AuditAction } from "./audit-catalog";
 
-const prohibited = /(password|hash|token|secret|credential|reset.?link|email|phone|name)/i;
+const PROHIBITED_AUDIT_METADATA_PATTERN =
+  /(password|hash|token|secret|credential|reset.?link|email|phone|name)/i;
 
 export function safeAuditMetadata(metadata: Record<string, unknown>) {
-  const allowed = new Set<string>(safeAuditMetadataKeys);
+  const allowedMetadataKeys = new Set<string>(safeAuditMetadataKeys);
   return Object.fromEntries(
     Object.entries(metadata).filter(
       ([key, value]) =>
-        allowed.has(key) &&
-        !prohibited.test(key) &&
-        !prohibited.test(String(value)) &&
+        allowedMetadataKeys.has(key) &&
+        !PROHIBITED_AUDIT_METADATA_PATTERN.test(key) &&
+        !PROHIBITED_AUDIT_METADATA_PATTERN.test(String(value)) &&
         ["string", "number", "boolean"].includes(typeof value),
     ),
   ) as Record<string, string | number | boolean>;

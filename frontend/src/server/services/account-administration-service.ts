@@ -103,8 +103,8 @@ export async function createOwnerManagedAccount(
       classIds: [...new Set(input.classIds)],
     });
     if (input.status === "active") {
-      const enabled = await providers.auth.setEnabled(identity.value.authUserId, true);
-      if (!enabled.ok) throw new Error("AUTH_ENABLE_FAILED");
+      const enableResult = await providers.auth.setEnabled(identity.value.authUserId, true);
+      if (!enableResult.ok) throw new Error("AUTH_ENABLE_FAILED");
     }
     return result(true, "OK", "帳號已建立");
   } catch {

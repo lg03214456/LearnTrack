@@ -114,6 +114,10 @@ Page 不負責：
 
 Client Component 必須接收可序列化的 props，不得直接匯入 `src/server/`。
 
+Client Component 可以呼叫具有明確型別且以 `"use server"` 標記的 Next.js Server Action，作為寫入邊界；
+但不得直接匯入該 Action 使用的 Service、Repository、Mock Store、資料庫 Client 或其他
+`src/server/` 模組。
+
 ### 元件拆分
 
 元件應在以下情況拆分：

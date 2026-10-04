@@ -15,14 +15,14 @@ export function RolesView({
   canManage: boolean;
 }) {
   const [selectedId, setSelectedId] = useState(roles[0]?.id ?? "");
-  const selected = roles.find((role) => role.id === selectedId) ?? roles[0];
+  const selectedRole = roles.find((role) => role.id === selectedId) ?? roles[0];
   const groups = useMemo(
     () => Object.entries(Object.groupBy(permissions, (item) => item.module)),
     [permissions],
   );
-  if (!selected)
+  if (!selectedRole)
     return <Card className="p-12 text-center text-slate-500">目前沒有可設定的角色。</Card>;
-  const isEditable = canManage && !selected.isSystem;
+  const isEditable = canManage && !selectedRole.isSystem;
   return (
     <>
       <MockNotice />
@@ -41,10 +41,10 @@ export function RolesView({
                 type="button"
                 key={role.id}
                 onClick={() => setSelectedId(role.id)}
-                className={`flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition ${role.id === selected.id ? "border-teal-700 bg-teal-50 text-teal-900" : "border-transparent hover:bg-slate-50"}`}
+                className={`flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition ${role.id === selectedRole.id ? "border-teal-700 bg-teal-50 text-teal-900" : "border-transparent hover:bg-slate-50"}`}
               >
                 <span
-                  className={`grid size-8 place-items-center rounded-full ${role.id === selected.id ? "bg-teal-800 text-white" : "bg-slate-100 text-slate-500"}`}
+                  className={`grid size-8 place-items-center rounded-full ${role.id === selectedRole.id ? "bg-teal-800 text-white" : "bg-slate-100 text-slate-500"}`}
                 >
                   <Shield size={15} />
                 </span>
@@ -68,23 +68,23 @@ export function RolesView({
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-bold">{selected.name}權限</h2>
-                  {selected.isSystem && (
+                  <h2 className="text-lg font-bold">{selectedRole.name}權限</h2>
+                  {selectedRole.isSystem && (
                     <span className="pill bg-slate-100 text-slate-600">
                       <LockKeyhole size={11} />
                       系統角色
                     </span>
                   )}
                 </div>
-                <p className="mt-1 text-sm text-slate-500">{selected.description}</p>
+                <p className="mt-1 text-sm text-slate-500">{selectedRole.description}</p>
               </div>
               <span className="text-xs text-slate-500">
-                已啟用 {selected.permissions.length} 項
+                已啟用 {selectedRole.permissions.length} 項
               </span>
             </div>
             <form action={updateRoleAction} className="p-5">
-              <input type="hidden" name="roleId" value={selected.id} />
-              <input type="hidden" name="version" value={selected.version} />
+              <input type="hidden" name="roleId" value={selectedRole.id} />
+              <input type="hidden" name="version" value={selectedRole.version} />
               <div className="space-y-5">
                 {groups.map(([module, items]) => (
                   <section key={module}>
@@ -98,14 +98,14 @@ export function RolesView({
                       {items?.map((permission) => (
                         <label
                           key={permission.code}
-                          className={`flex items-center gap-3 rounded-xl border p-4 ${selected.permissions.includes(permission.code) ? "border-teal-100 bg-teal-50/40" : "bg-white"}`}
+                          className={`flex items-center gap-3 rounded-xl border p-4 ${selectedRole.permissions.includes(permission.code) ? "border-teal-100 bg-teal-50/40" : "bg-white"}`}
                         >
                           <input
                             className="size-4 accent-teal-700"
                             type="checkbox"
                             name="permission"
                             value={permission.code}
-                            defaultChecked={selected.permissions.includes(permission.code)}
+                            defaultChecked={selectedRole.permissions.includes(permission.code)}
                             disabled={!isEditable}
                           />
                           <span className="min-w-0 flex-1">
@@ -116,7 +116,7 @@ export function RolesView({
                                 : "獨立權限"}
                             </small>
                           </span>
-                          {selected.permissions.includes(permission.code) && (
+                          {selectedRole.permissions.includes(permission.code) && (
                             <Check size={15} className="text-teal-700" />
                           )}
                         </label>
@@ -127,7 +127,7 @@ export function RolesView({
               </div>
               <div className="mt-6 flex items-center justify-between border-t pt-4">
                 <p className="text-xs text-slate-500">
-                  {selected.isSystem
+                  {selectedRole.isSystem
                     ? "系統角色權限固定，無法直接修改。"
                     : canManage
                       ? "儲存前會驗證權限相依關係。"

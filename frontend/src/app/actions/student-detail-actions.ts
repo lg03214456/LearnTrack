@@ -5,9 +5,9 @@ import { getAuthorizationContext } from "@/server/auth/identity";
 import { getAuthProviders } from "@/server/auth/providers";
 import { executeAuditedMutation } from "@/server/audit/audit-service";
 import {
-  correctAssessmentResult,
-  recordAssessmentResult,
-  updateStudentProfile,
+  correctAssessmentResultWithConfiguredRepository,
+  recordAssessmentResultWithConfiguredRepository,
+  updateStudentProfileWithConfiguredRepository,
 } from "@/server/services/student-detail-service";
 import type { CommandResult } from "@/features/access-control/access-control.types";
 
@@ -32,7 +32,7 @@ export async function updateStudentProfileAction(data: FormData) {
       metadata: { changedFields: "profile-fields" },
     },
     mutate: () =>
-      updateStudentProfile(actor, {
+      updateStudentProfileWithConfiguredRepository(actor, {
         studentId,
         phone: field(data, "phone"),
         school: field(data, "school"),
@@ -58,7 +58,7 @@ export async function recordAssessmentResultAction(data: FormData) {
       resourceId: studentId,
     },
     mutate: () =>
-      recordAssessmentResult(actor, {
+      recordAssessmentResultWithConfiguredRepository(actor, {
         studentId,
         assessmentId: field(data, "assessmentId"),
         score: Number(data.get("score")),
@@ -80,7 +80,7 @@ export async function correctAssessmentResultAction(data: FormData) {
       resourceId: studentId,
     },
     mutate: () =>
-      correctAssessmentResult(actor, {
+      correctAssessmentResultWithConfiguredRepository(actor, {
         resultId: field(data, "resultId"),
         score: Number(data.get("score")),
         comment: field(data, "comment"),
@@ -117,7 +117,7 @@ export async function recordAssessmentResultStateAction(
       resourceId: studentId,
     },
     mutate: () =>
-      recordAssessmentResult(actor, {
+      recordAssessmentResultWithConfiguredRepository(actor, {
         studentId,
         assessmentId: field(data, "assessmentId"),
         score: Number(data.get("score")),
@@ -143,7 +143,7 @@ export async function correctAssessmentResultStateAction(
       resourceId: studentId,
     },
     mutate: () =>
-      correctAssessmentResult(actor, {
+      correctAssessmentResultWithConfiguredRepository(actor, {
         resultId: field(data, "resultId"),
         score: Number(data.get("score")),
         comment: field(data, "comment"),

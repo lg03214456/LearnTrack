@@ -46,7 +46,7 @@ export default async function Page({
     page: Math.max(1, Number(query.page) || 1),
     pageSize: 20,
   };
-  const detail = studentDetailRepository.get(actor, studentId, filters);
+  const detail = await studentDetailRepository.get(actor, studentId, filters);
   if (!detail) notFound();
   const canViewPlans = can(actor, "study_plans.read");
   const requestedSection = isStudentDetailSection(query.tab) ? query.tab : "overview";

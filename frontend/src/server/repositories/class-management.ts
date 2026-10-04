@@ -8,6 +8,8 @@ import type {
 import { can, canAccessClass } from "@/server/authorization/policy";
 import { classManagementStore, classReferenceData } from "@/server/data/mock/class-management";
 import { students } from "@/server/data/mock/fixtures";
+import { selectDomainRepository } from "./domain-provider";
+import { supabaseClassManagementRepository } from "./class-management-supabase";
 const labels = (ids: string[], options: { id: string; label: string }[]) =>
   ids.map((id) => options.find((x) => x.id === id)?.label).filter((x): x is string => Boolean(x));
 const capabilities = (actor: AuthorizationContext, classId?: string) => {
@@ -19,7 +21,7 @@ const capabilities = (actor: AuthorizationContext, classId?: string) => {
     canChangeLifecycle: organizationWide && can(actor, "classes.manage"),
   };
 };
-export const classManagementRepository = {
+export const mockClassManagementRepository = {
   async list(
     actor: AuthorizationContext,
     query: { search?: string; gradeId?: string; includeArchived?: boolean } = {},
@@ -202,5 +204,29 @@ export const classManagementRepository = {
           .filter((s): s is NonNullable<typeof s> => Boolean(s))
           .map((s) => ({ studentId: s.id, name: s.name, number: s.number })),
       }));
+  },
+};
+
+export const classManagementRepository = {
+  list(
+    actor: AuthorizationContext,
+    query: { search?: string; gradeId?: string; includeArchived?: boolean } = {},
+  ) {
+    return selectDomainRepository({
+      mock: mockClassManagementRepository,
+      supabase: supabaseClassManagementRepository,
+    }).list(actor, query);
+  },
+  editor(actor: AuthorizationContext, classId?: string) {
+    return selectDomainRepository({
+      mock: mockClassManagementRepository,
+      supabase: supabaseClassManagementRepository,
+    }).editor(actor, classId);
+  },
+  expectedAttendance(actor: AuthorizationContext, date: string) {
+    return selectDomainRepository({
+      mock: mockClassManagementRepository,
+      supabase: supabaseClassManagementRepository,
+    }).expectedAttendance(actor, date);
   },
 };

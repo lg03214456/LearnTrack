@@ -10,4 +10,10 @@ describe("progress filters", () => {
     fireEvent.click(screen.getByText("清除篩選"));
     expect(screen.getByText("陳品妤")).toBeInTheDocument();
   });
+  it("shows zero metrics and a durable-data empty state without records", () => {
+    render(<ProgressView rows={[]} />);
+    expect(screen.getByText("目前尚無學生進度紀錄")).toBeInTheDocument();
+    expect(screen.queryByText("NaN%")).not.toBeInTheDocument();
+    expect(screen.queryByText("本週新增 3 位")).not.toBeInTheDocument();
+  });
 });

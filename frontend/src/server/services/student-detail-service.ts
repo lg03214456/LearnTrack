@@ -12,6 +12,9 @@ import { classRows, students } from "@/server/data/mock/fixtures";
 import { enrollments } from "@/server/data/mock/relations";
 import { studentProfileStore } from "@/server/data/mock/student-profile";
 import { canAccessStudent } from "@/server/repositories/student-detail-core";
+import { authRuntimeConfig } from "@/server/auth/provider-config";
+import { RepositoryError } from "@/server/repositories/repository-error";
+import { supabaseStudentDetailRepository } from "@/server/repositories/student-detail-supabase";
 
 const response = (ok: boolean, code: CommandResult["code"], message: string): CommandResult => ({
   ok,
@@ -154,4 +157,78 @@ export function correctAssessmentResult(
     updatedBy: actor.profileId,
   });
   return response(true, "OK", "成績已更正");
+}
+
+const persistenceFailure = (error: unknown, fallback: string): CommandResult => {
+  if (error instanceof RepositoryError) {
+    if (error.code === "FORBIDDEN") return response(false, "FORBIDDEN", "你沒有執行此操作的權限");
+    if (error.code === "NOT_FOUND") return response(false, "NOT_FOUND", "找不到可管理的資料");
+    if (error.code === "INVALID_RELATIONSHIP")
+      return response(false, "VALIDATION_ERROR", "資料內容或關聯無效");
+    if (error.code === "CONFLICT")
+      return response(false, "CONFLICT", "資料已被更新，請重新整理後再試");
+  }
+  return response(false, "CONFLICT", fallback);
+};
+
+export async function updateStudentProfileWithConfiguredRepository(
+  actor: AuthorizationContext,
+  command: UpdateStudentProfileCommand,
+): Promise<CommandResult> {
+  if (authRuntimeConfig().domainDataProvider === "mock")
+    return updateStudentProfile(actor, command);
+  if (!can(actor, "student_profiles.manage"))
+    return response(false, "FORBIDDEN", "你沒有編輯學生個資的權限");
+  if (
+    [
+      command.phone,
+      command.school,
+      command.grade,
+      command.guardianName,
+      command.guardianPhone,
+    ].some((value) => !clean(value))
+  )
+    return response(false, "VALIDATION_ERROR", "所有個資欄位皆為必填");
+  try {
+    await supabaseStudentDetailRepository.saveProfile(actor, command);
+    return response(true, "OK", "學生與家長資料已更新");
+  } catch (error) {
+    return persistenceFailure(error, "學生與家長資料暫時無法儲存");
+  }
+}
+
+export async function recordAssessmentResultWithConfiguredRepository(
+  actor: AuthorizationContext,
+  command: RecordAssessmentResultCommand,
+): Promise<CommandResult> {
+  if (authRuntimeConfig().domainDataProvider === "mock")
+    return recordAssessmentResult(actor, command);
+  if (!can(actor, "assessment_history.manage"))
+    return response(false, "FORBIDDEN", "你沒有登錄成績的權限");
+  if (!Number.isFinite(command.score) || command.score < 0)
+    return response(false, "VALIDATION_ERROR", "分數必須是大於等於 0 的數字");
+  try {
+    await supabaseStudentDetailRepository.recordResult(actor, command);
+    return response(true, "OK", "成績已登錄");
+  } catch (error) {
+    return persistenceFailure(error, "成績暫時無法儲存");
+  }
+}
+
+export async function correctAssessmentResultWithConfiguredRepository(
+  actor: AuthorizationContext,
+  command: CorrectAssessmentResultCommand,
+): Promise<CommandResult> {
+  if (authRuntimeConfig().domainDataProvider === "mock")
+    return correctAssessmentResult(actor, command);
+  if (!can(actor, "assessment_history.manage"))
+    return response(false, "FORBIDDEN", "你沒有更正成績的權限");
+  if (!Number.isFinite(command.score) || command.score < 0)
+    return response(false, "VALIDATION_ERROR", "分數必須是大於等於 0 的數字");
+  try {
+    await supabaseStudentDetailRepository.correctResult(actor, command);
+    return response(true, "OK", "成績已更正");
+  } catch (error) {
+    return persistenceFailure(error, "成績暫時無法儲存");
+  }
 }

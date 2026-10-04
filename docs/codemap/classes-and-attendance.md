@@ -4,8 +4,8 @@
 
 | URL | 主要用途 | 入口／畫面 |
 |---|---|---|
-| `/classes` | 班級總覽與快速操作 | `frontend/src/app/(dashboard)/classes/page.tsx`、`components/views/classes-view.tsx` |
-| `/classes/new` | 建立班級、時段與初始學生 | `frontend/src/app/(dashboard)/classes/new/page.tsx`、`features/classes/components/class-editor.tsx` |
+| `/classes` | 班級總覽、快速操作與新增班級對話框 | `frontend/src/app/(dashboard)/classes/page.tsx`、`components/views/classes-view.tsx`、`features/classes/components/class-create-dialog.tsx` |
+| `/classes/new` | 建立班級的相容入口；班級總覽預設改由對話框建立 | `frontend/src/app/(dashboard)/classes/new/page.tsx`、`features/classes/components/class-editor.tsx` |
 | `/classes/[classId]/edit` | 編輯、封存、入退班 | `frontend/src/app/(dashboard)/classes/[classId]/edit/page.tsx`、`features/classes/components/class-editor.tsx` |
 | `/classes/[classId]?date=YYYY-MM-DD` | 今日課堂與班級成員個別教材進度 | `frontend/src/app/(dashboard)/classes/[classId]/page.tsx`、`features/class-sessions/components/class-daily-workspace.tsx` |
 | `/attendance` | 每日點名與統計 | `frontend/src/app/(dashboard)/attendance/page.tsx`、`components/views/attendance-view.tsx` |
@@ -17,10 +17,10 @@
 | 責任 | 主要位置 |
 |---|---|
 | 班級 UI 與 Client-safe contracts | `frontend/src/features/classes/` |
-| 班級總覽、編輯選項、每日應到查詢 | `frontend/src/server/repositories/class-management.ts` |
+| 班級總覽、編輯選項、每日應到查詢 | `frontend/src/server/repositories/class-management.ts`、`class-management-supabase.ts` |
 | 建立、更新、容量、入退班、生命週期 | `frontend/src/server/services/class-management-service.ts` |
 | 班級 Server Actions | `frontend/src/app/actions/class-management-actions.ts` |
-| 可重設的班級假資料 | `frontend/src/server/data/mock/class-management.ts` |
+| 可重設的班級假資料 | `frontend/src/server/data/mock/class-management.ts`，只供 Mock provider／測試使用 |
 | Enrollment 關聯 | `frontend/src/server/data/mock/relations.ts` |
 | 課堂、成員快照與學生進度歷史 | `frontend/src/server/data/mock/class-sessions.ts` |
 | 今日課堂 JOIN 與 View Model | `frontend/src/server/repositories/class-session.ts`、`class-session-core.ts` |
@@ -29,6 +29,7 @@
 | 點名 Client-safe contracts | `frontend/src/features/attendance/attendance.types.ts` |
 | 指定日期／班級點名 View Model | `frontend/src/server/repositories/attendance.ts`、`attendance-core.ts` |
 | 班級基本資料欄位 | `frontend/src/features/classes/components/class-basic-fields.tsx` |
+| 機構科目目錄與班級自動編碼 | `frontend/supabase/migrations/202610050001_subject_catalog_and_automatic_class_codes.sql`、`frontend/src/server/repositories/class-management-supabase.ts` |
 | 每週排課欄位 | `frontend/src/features/classes/components/class-schedule-fields.tsx` |
 | 初始學生選擇 | `frontend/src/features/classes/components/class-student-selector.tsx` |
 

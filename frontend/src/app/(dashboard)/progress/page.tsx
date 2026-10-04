@@ -14,8 +14,10 @@ export default async function Page() {
         : actor.scope.kind === "linked-students"
           ? actor.scope.studentIds
           : undefined,
-    allRows = await dashboardRepository.progress(actor.organizationId, classIds),
-    rows = studentIds ? allRows.filter((row) => studentIds.includes(row.studentId)) : allRows;
+    progressRows = await dashboardRepository.progress(actor.organizationId, classIds),
+    scopedProgressRows = studentIds
+      ? progressRows.filter((row) => studentIds.includes(row.studentId))
+      : progressRows;
   return (
     <>
       <PageHeader
@@ -23,7 +25,7 @@ export default async function Page() {
         title="學生進度紀錄"
         description="掌握授權範圍內的學習狀況、課程進度與近期表現。"
       />
-      <ProgressView rows={rows} />
+      <ProgressView rows={scopedProgressRows} />
     </>
   );
 }

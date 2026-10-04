@@ -1,34 +1,38 @@
 "use client";
 import { useMemo, useState } from "react";
 import { AlertCircle, BookOpen, CheckCircle2, Users } from "lucide-react";
-import type { ProgressRow } from "@/server/domain/types";
+import type { ProgressRow } from "@/features/progress/progress.types";
 import { Card, Metric, ProgressBar, Status } from "@/components/ui";
 export function ProgressView({ rows }: { rows: ProgressRow[] }) {
-  const [q, setQ] = useState(""),
-    [cls, setCls] = useState("all");
-  const visible = useMemo(
+  const [searchQuery, setSearchQuery] = useState(""),
+    [selectedClassName, setSelectedClassName] = useState("all");
+  const filteredProgressRows = useMemo(
     () =>
       rows.filter(
-        (r) =>
-          (r.name.includes(q) || r.number.toLowerCase().includes(q.toLowerCase())) &&
-          (cls === "all" || r.className === cls),
+        (progressRow) =>
+          (progressRow.name.includes(searchQuery) ||
+            progressRow.number.toLowerCase().includes(searchQuery.toLowerCase())) &&
+          (selectedClassName === "all" || progressRow.className === selectedClassName),
       ),
-    [rows, q, cls],
+    [rows, searchQuery, selectedClassName],
   );
+  const averageProgress = rows.length
+    ? Math.round(rows.reduce((sum, row) => sum + row.progress, 0) / rows.length)
+    : 0;
   return (
     <>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Metric label="學習學生" value={rows.length * 4 + 4} sub="本週新增 3 位" icon={Users} />
+        <Metric label="學習學生" value={rows.length} icon={Users} />
+        <Metric label="平均完成度" value={`${averageProgress}%`} icon={CheckCircle2} />
         <Metric
-          label="平均完成度"
-          value={`${Math.round(rows.reduce((a, b) => a + b.progress, 0) / rows.length)}%`}
-          sub="較上月 ↑ 6%"
-          icon={CheckCircle2}
+          label="待完成項目"
+          value={rows.reduce((sum, row) => sum + Math.max(0, row.total - row.completed), 0)}
+          icon={BookOpen}
+          tone="blue"
         />
-        <Metric label="待完成作業" value="12份" icon={BookOpen} tone="blue" />
         <Metric
           label="需要關注"
-          value={rows.filter((r) => r.status === "behind").length}
+          value={rows.filter((progressRow) => progressRow.status === "behind").length}
           sub="進度低於標準"
           icon={AlertCircle}
           tone="red"
@@ -40,22 +44,22 @@ export function ProgressView({ rows }: { rows: ProgressRow[] }) {
             aria-label="搜尋學生"
             className="input min-w-64 flex-1"
             placeholder="搜尋學生姓名或學號..."
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
           />
           <select
             aria-label="班級篩選"
             className="input"
-            value={cls}
-            onChange={(e) => setCls(e.target.value)}
+            value={selectedClassName}
+            onChange={(event) => setSelectedClassName(event.target.value)}
           >
             <option value="all">全部班級</option>
-            {[...new Set(rows.map((r) => r.className))].map((x) => (
-              <option key={x}>{x}</option>
+            {[...new Set(rows.map((progressRow) => progressRow.className))].map((className) => (
+              <option key={className}>{className}</option>
             ))}
           </select>
         </div>
-        {visible.length ? (
+        {filteredProgressRows.length ? (
           <div className="table-wrap">
             <table>
               <thead>
@@ -70,32 +74,32 @@ export function ProgressView({ rows }: { rows: ProgressRow[] }) {
                 </tr>
               </thead>
               <tbody>
-                {visible.map((r) => (
-                  <tr key={r.studentId}>
+                {filteredProgressRows.map((progressRow) => (
+                  <tr key={`${progressRow.studentId}:${progressRow.className}`}>
                     <td>
-                      <b>{r.name}</b>
-                      <small className="block text-slate-400">{r.number}</small>
+                      <b>{progressRow.name}</b>
+                      <small className="block text-slate-400">{progressRow.number}</small>
                     </td>
-                    <td>{r.className}</td>
+                    <td>{progressRow.className}</td>
                     <td>
                       <div className="flex w-44 items-center gap-3">
-                        <span>{r.progress}%</span>
+                        <span>{progressRow.progress}%</span>
                         <ProgressBar
-                          value={r.progress}
-                          color={r.status === "behind" ? "#dc2626" : undefined}
+                          value={progressRow.progress}
+                          color={progressRow.status === "behind" ? "#dc2626" : undefined}
                         />
                       </div>
                     </td>
                     <td>
-                      {r.completed}/{r.total}
+                      {progressRow.completed}/{progressRow.total}
                     </td>
-                    <td className={r.score < 70 ? "font-bold text-red-600" : "font-bold"}>
-                      {r.score} 分
+                    <td className={progressRow.score < 70 ? "font-bold text-red-600" : "font-bold"}>
+                      {progressRow.score} 分
                     </td>
                     <td>
-                      <Status value={r.status} />
+                      <Status value={progressRow.status} />
                     </td>
-                    <td>{r.recent}</td>
+                    <td>{progressRow.recent}</td>
                   </tr>
                 ))}
               </tbody>
@@ -103,21 +107,23 @@ export function ProgressView({ rows }: { rows: ProgressRow[] }) {
           </div>
         ) : (
           <div className="p-16 text-center text-slate-500">
-            找不到符合條件的學生
+            {rows.length ? "找不到符合條件的學生" : "目前尚無學生進度紀錄"}
             <br />
-            <button
-              onClick={() => {
-                setQ("");
-                setCls("all");
-              }}
-              className="text-brand mt-3 underline"
-            >
-              清除篩選
-            </button>
+            {rows.length > 0 && (
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedClassName("all");
+                }}
+                className="text-brand mt-3 underline"
+              >
+                清除篩選
+              </button>
+            )}
           </div>
         )}
         <div className="border-t p-4 text-xs text-slate-500">
-          顯示 1–{visible.length} 筆，共 {visible.length} 筆
+          顯示 1–{filteredProgressRows.length} 筆，共 {filteredProgressRows.length} 筆
         </div>
       </Card>
     </>

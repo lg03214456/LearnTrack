@@ -1,6 +1,8 @@
 import "server-only";
 import type { AttendanceRow } from "@/features/attendance/attendance.types";
-import type { Analytics, ClassRow, ProgressRow } from "@/server/domain/types";
+import type { Analytics } from "@/features/analytics/analytics.types";
+import type { ProgressRow } from "@/features/progress/progress.types";
+import type { ClassRow } from "@/server/domain/types";
 import {
   attendanceRows,
   classRows,
@@ -9,6 +11,8 @@ import {
   students,
 } from "@/server/data/mock/fixtures";
 import { enrollments } from "@/server/data/mock/relations";
+import { selectDomainRepository } from "./domain-provider";
+import { supabaseDashboardRepository } from "./dashboard-supabase";
 export interface DashboardRepository {
   progress(organizationId: string, classIds?: string[]): Promise<ProgressRow[]>;
   classes(organizationId: string, classIds?: string[]): Promise<ClassRow[]>;
@@ -81,5 +85,17 @@ class MockDashboardRepository implements DashboardRepository {
     };
   }
 }
-export const dashboardRepository: DashboardRepository = new MockDashboardRepository();
+const mockDashboardRepository = new MockDashboardRepository();
+export const dashboardRepository: DashboardRepository = {
+  progress(organizationId, classIds) {
+    return selectDomainRepository({
+      mock: mockDashboardRepository,
+      supabase: supabaseDashboardRepository,
+    }).progress(organizationId, classIds);
+  },
+  classes: (organizationId, classIds) => mockDashboardRepository.classes(organizationId, classIds),
+  attendance: () => mockDashboardRepository.attendance(),
+  analytics: (organizationId, classIds) =>
+    mockDashboardRepository.analytics(organizationId, classIds),
+};
 export { ORG };

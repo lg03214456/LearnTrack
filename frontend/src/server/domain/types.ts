@@ -1,7 +1,6 @@
 import type { AttendanceStatus } from "@/features/attendance/attendance.types";
 
 export type StudentStatus = "active" | "leave" | "archived";
-export type ProgressStatus = "ahead" | "normal" | "behind";
 
 export interface Organization {
   id: string;
@@ -66,20 +65,9 @@ export interface StudentRecord {
   archivedAt?: string;
   archivedBy?: string;
   archiveReason?: string;
+  revision?: number;
 }
 
-export interface ProgressRow {
-  studentId: string;
-  name: string;
-  number: string;
-  className: string;
-  progress: number;
-  completed: number;
-  total: number;
-  score: number;
-  status: ProgressStatus;
-  recent: string;
-}
 export interface ClassRow {
   id: string;
   organizationId: string;
@@ -93,13 +81,4 @@ export interface ClassRow {
   teacherName: string;
   students: number;
   progress: number;
-}
-export interface Analytics {
-  averageScore: number;
-  completion: number;
-  participation: number;
-  atRisk: number;
-  trend: { month: string; score: number }[];
-  bands: { label: string; value: number; color: string }[];
-  classes: { name: string; teacher: string; progress: number; score: number; status: string }[];
 }

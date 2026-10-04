@@ -8,6 +8,8 @@ Supabase Auth 與 Email adapters 已完成；membership/audit schema 與 RLS mig
 
 目前 Auth 與 Email 已可使用 Supabase：公開設定統一使用 `NEXT_PUBLIC_SUPABASE_URL` 與 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`，Server 管理操作使用 `SUPABASE_SECRET_KEY`，密碼 callback 使用 `AUTH_SITE_URL`。SMTP sender 與憑證由 Supabase Dashboard 管理。啟用 Supabase Auth 時，登入後會由 `profiles`、active membership、role 與 permission 表解析 organization-wide Owner；啟用 PostgreSQL Audit 時，操作紀錄會改寫入 `audit_logs`。老師、學生與聯絡人的 relationship-scoped 資料仍由 Mock repository 提供，因此在這些 repository 完成 Supabase migration 前會安全地拒絕登入，不會誤給全機構資料權限。
 
+Domain repository 由 `LEARNTRACK_DOMAIN_DATA_PROVIDER` 選擇 `mock` 或 `supabase`。Production 必須明確設為 `supabase`，缺少設定或指定 `mock` 都會 fail closed；Local 單元測試可使用 `mock`。在所有 Supabase adapters 完成接線前，不要把尚未完成的 feature 宣稱為持久化完成。
+
 ## PostgreSQL 資料表
 
 第一階段 migration 建立 `organizations`、`profiles`、`organization_memberships`、`roles`、`permissions`、`role_permissions`、`membership_roles`、`students`、`course_classes`、`class_enrollments`、`class_assignments`、`student_user_links`、`student_contacts` 與 `audit_logs`。既有 Mock 使用的 organization、profile、student、class 等穩定 ID 保留為 `text`；只有 Supabase `auth.users.id` 與新關聯流水 ID 使用 UUID。所有租戶關聯透過 `organization_id` 與複合 foreign key 防止跨機構關聯。
@@ -17,6 +19,12 @@ Migration 執行順序：
 1. `202609160001_identity_membership_and_audit.sql`
 2. `202609160002_row_level_security.sql`
 3. 初始 Owner bootstrap（依環境選擇 Auth user，不把 Email 或 UUID寫死在共用 migration）
+4. `202609290001_platform_owner_read_access.sql`
+5. `202610020001_student_class_persistence.sql`
+6. `202610020002_student_class_functions.sql`
+7. `202610020003_student_class_contract_alignment.sql`
+
+學生名單與班級管理已由 `LEARNTRACK_DOMAIN_DATA_PROVIDER` 切換 Mock／Supabase adapter。Supabase 模式下，名單與班級頁面使用登入者 access token 讓 RLS 判斷範圍；學生、Enrollment 與班級 aggregate 寫入分別呼叫 `save_student_aggregate`、`change_student_lifecycle`、`save_class_aggregate`。學生個人頁的聯絡人、評量與課堂歷史仍待後續 schema，尚未切換。
 
 ### 初始 Owner bootstrap
 
@@ -115,6 +123,8 @@ RLS 先驗證 active organization membership；organization-wide 角色依 permi
 
 - `classes`: `organization_id`、`name`、`code`、`class_type`、nullable `capacity`、`lifecycle_status`、`progress`、`revision`、`completed_at`、`archived_at`。
 - `class_subjects`: class／subject FK；unique `(organization_id, class_id, subject_id)`。
+- `subjects`: 各機構可選科目、顯示名稱、狀態與班級代碼前綴；由 RLS 限制機構範圍。
+- `class_code_sequences`: 各機構、各前綴的最後流水號；只由 `save_class_aggregate` 原子更新。單科使用 `subjects.class_code_prefix`，多科使用 `MIX`，建立後班級代碼保持不變。
 - `class_grade_scopes`: class／grade FK；全年級可用明確 `scope_type`，避免假 grade FK；同班只允許一種範圍策略。
 - `class_teacher_assignments`: class／teacher FK、`started_at`、nullable `ended_at`；partial unique 確保同班只有一位 active primary teacher。
 - `class_schedule_slots`: class FK、`weekday smallint check (weekday between 0 and 6)`、`start_time time`、`end_time time`、nullable `room`，並檢查 `end_time > start_time`；unique `(organization_id, class_id, weekday, start_time, end_time)`。

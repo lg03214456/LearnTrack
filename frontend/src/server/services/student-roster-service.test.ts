@@ -20,6 +20,18 @@ afterEach(() => {
 });
 
 describe("student roster service", () => {
+  it("automatically assigns the next organization student number", () => {
+    const result = saveStudentRoster(resolveMockIdentity("owner"), {
+      number: "",
+      name: "自動編號學生",
+      gender: "女",
+      phone: "0912-000-998",
+      status: "active",
+    });
+
+    expect(result).toMatchObject({ ok: true, values: { number: "STU-0007" } });
+  });
+
   it("allows an organization manager to create a student and assign classes", () => {
     const result = saveStudentRoster(resolveMockIdentity("owner"), {
       number: "stu-0099",

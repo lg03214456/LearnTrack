@@ -6,12 +6,18 @@ Use these rules for modules, domain models, repositories, services, providers, m
 
 Keep dependencies moving inward:
 
-`route/page -> feature UI -> repository interface -> repository implementation -> service/action -> database`
+Reads and writes use separate entry paths while sharing domain contracts:
+
+`read route/page -> repository interface -> repository implementation -> data source`
+
+`feature UI -> typed Server Action -> service -> repository interface -> repository implementation -> data source`
 
 - Feature UI may depend on contracts, view models, and repository interfaces.
-- Repository implementations may depend on services or server actions.
+- Services depend on repository interfaces, not concrete Mock or Supabase stores.
+- Repository implementations must not depend on UI, services, or server actions.
 - Mock repositories may depend on mock fixtures.
-- Server actions may depend on server-only database clients.
+- Server actions authenticate, validate, authorize, and delegate; direct database access belongs in a
+  repository implementation unless the action is itself a deliberately documented adapter boundary.
 - Do not let pages or components select mock versus production storage.
 
 ## Feature shape

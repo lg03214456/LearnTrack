@@ -11,7 +11,7 @@ export default async function ResetPasswordPage({
 }) {
   const token = (await searchParams).token ?? "";
   const usesSupabase = authRuntimeConfig().authProvider === "supabase";
-  const valid = usesSupabase
+  const isPasswordLinkValid = usesSupabase
     ? false
     : await validatePasswordLink(token, getAuthProviders()).catch(() => false);
   return (
@@ -24,7 +24,7 @@ export default async function ResetPasswordPage({
         {usesSupabase ? (
           <SupabaseResetPasswordForm />
         ) : (
-          <ResetPasswordForm token={token} valid={valid} />
+          <ResetPasswordForm token={token} isValid={isPasswordLinkValid} />
         )}
       </section>
     </main>

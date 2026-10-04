@@ -9,27 +9,27 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { Analytics } from "@/server/domain/types";
+import type { Analytics } from "@/features/analytics/analytics.types";
 import { Card, Metric, ProgressBar } from "@/components/ui";
-export function AnalyticsView({ data }: { data: Analytics }) {
+export function AnalyticsView({ analytics }: { analytics: Analytics }) {
   return (
     <>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Metric
           label="整體平均分數"
-          value={`${data.averageScore}分`}
+          value={`${analytics.averageScore}分`}
           sub="較上月提升 2.4%"
           icon={Sigma}
         />
         <Metric
           label="課程完成率"
-          value={`${data.completion}%`}
+          value={`${analytics.completion}%`}
           sub="持續穩定成長"
           icon={CheckCircle2}
           tone="blue"
         />
         <Metric label="表現優異學生" value="45位" icon={Award} />
-        <Metric label="需關注學生" value={data.atRisk} icon={AlertCircle} tone="red" />
+        <Metric label="需關注學生" value={analytics.atRisk} icon={AlertCircle} tone="red" />
       </div>
       <div className="mt-5 grid gap-4 xl:grid-cols-[2fr_1fr]">
         <Card className="p-5">
@@ -41,7 +41,7 @@ export function AnalyticsView({ data }: { data: Analytics }) {
           </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data.trend}>
+              <AreaChart data={analytics.trend}>
                 <defs>
                   <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0" stopColor="var(--brand)" stopOpacity={0.25} />
@@ -60,13 +60,13 @@ export function AnalyticsView({ data }: { data: Analytics }) {
         <Card className="p-5">
           <b>成績區間分佈</b>
           <p className="mb-5 text-xs text-slate-500">本月期中測驗</p>
-          {data.bands.map((x) => (
-            <div key={x.label} className="mb-4">
+          {analytics.bands.map((scoreBand) => (
+            <div key={scoreBand.label} className="mb-4">
               <div className="mb-1 flex justify-between text-xs">
-                <span>{x.label}</span>
-                <b>{x.value}%</b>
+                <span>{scoreBand.label}</span>
+                <b>{scoreBand.value}%</b>
               </div>
-              <ProgressBar value={x.value} color={x.color} />
+              <ProgressBar value={scoreBand.value} color={scoreBand.color} />
             </div>
           ))}
         </Card>
@@ -88,22 +88,24 @@ export function AnalyticsView({ data }: { data: Analytics }) {
               </tr>
             </thead>
             <tbody>
-              {data.classes.map((x) => (
-                <tr key={x.name}>
+              {analytics.classes.map((classAnalytics) => (
+                <tr key={classAnalytics.name}>
                   <td>
-                    <b>{x.name}</b>
+                    <b>{classAnalytics.name}</b>
                   </td>
-                  <td>{x.teacher}</td>
+                  <td>{classAnalytics.teacher}</td>
                   <td>
                     <div className="flex w-44 items-center gap-3">
-                      <ProgressBar value={x.progress} />
-                      {x.progress}%
+                      <ProgressBar value={classAnalytics.progress} />
+                      {classAnalytics.progress}%
                     </div>
                   </td>
-                  <td className={x.score < 70 ? "font-bold text-red-600" : "font-bold"}>
-                    {x.score} 分
+                  <td
+                    className={classAnalytics.score < 70 ? "font-bold text-red-600" : "font-bold"}
+                  >
+                    {classAnalytics.score} 分
                   </td>
-                  <td>{x.status}</td>
+                  <td>{classAnalytics.status}</td>
                 </tr>
               ))}
             </tbody>

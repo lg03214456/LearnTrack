@@ -7,6 +7,8 @@ import { students } from "@/server/data/mock/fixtures";
 import { classManagementStore, classReferenceData } from "@/server/data/mock/class-management";
 import type { ClassRow, Enrollment } from "@/server/domain/types";
 import { buildStudentListResult } from "./student-roster-core";
+import { selectDomainRepository } from "./domain-provider";
+import { supabaseStudentRosterRepository } from "./student-roster-supabase";
 
 const weekdayLabels = ["日", "一", "二", "三", "四", "五", "六"];
 function buildClassRows(): ClassRow[] {
@@ -65,7 +67,7 @@ function buildEnrollments(): Enrollment[] {
 export interface StudentRosterRepository {
   listStudents(query: ListStudentsQuery): Promise<StudentListResult>;
 }
-class MockStudentRosterRepository implements StudentRosterRepository {
+export class MockStudentRosterRepository implements StudentRosterRepository {
   async listStudents(query: ListStudentsQuery) {
     return buildStudentListResult(query, {
       students,
@@ -74,4 +76,12 @@ class MockStudentRosterRepository implements StudentRosterRepository {
     });
   }
 }
-export const studentRosterRepository: StudentRosterRepository = new MockStudentRosterRepository();
+const mockStudentRosterRepository = new MockStudentRosterRepository();
+export const studentRosterRepository: StudentRosterRepository = {
+  listStudents(query) {
+    return selectDomainRepository({
+      mock: mockStudentRosterRepository,
+      supabase: supabaseStudentRosterRepository,
+    }).listStudents(query);
+  },
+};

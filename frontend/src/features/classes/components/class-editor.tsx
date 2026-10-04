@@ -20,14 +20,22 @@ function Submit() {
   return (
     <button
       disabled={pending}
-      className="rounded-lg bg-teal-800 px-5 py-2.5 font-bold text-white disabled:opacity-50"
+      className="w-full rounded-lg bg-teal-800 px-5 py-2.5 font-bold text-white disabled:opacity-50 sm:w-auto"
     >
       {pending ? "儲存中…" : "儲存班級"}
     </button>
   );
 }
 
-export function ClassEditor({ view }: { view: ClassEditorView }) {
+export function ClassEditor({
+  view,
+  onCancel,
+  returnTo,
+}: {
+  view: ClassEditorView;
+  onCancel?: () => void;
+  returnTo?: "/classes";
+}) {
   const [state, action] = useActionState(saveClassStateAction, initialState);
   const values = state.values ?? view.initial;
   const [schedules, setSchedules] = useState<WeeklyScheduleSlot[]>(values.schedules);
@@ -44,9 +52,10 @@ export function ClassEditor({ view }: { view: ClassEditorView }) {
   );
 
   return (
-    <form action={action} className="space-y-5">
+    <form action={action} className="min-w-0 space-y-4 sm:space-y-5">
       <input type="hidden" name="classId" value={values.classId ?? ""} />
       <input type="hidden" name="revision" value={values.revision ?? ""} />
+      {returnTo && <input type="hidden" name="returnTo" value={returnTo} />}
       <input type="hidden" name="schedules" value={JSON.stringify(schedules)} />
       {selectedStudentIds.map((studentId) => (
         <input key={studentId} type="hidden" name="studentIds" value={studentId} />
@@ -73,10 +82,23 @@ export function ClassEditor({ view }: { view: ClassEditorView }) {
           {state.message}
         </p>
       )}
-      <div className="flex justify-end gap-3">
-        <Link href="/classes" className="rounded-lg border px-5 py-2.5 font-bold">
-          取消
-        </Link>
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        {onCancel ? (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="w-full rounded-lg border px-5 py-2.5 font-bold sm:w-auto"
+          >
+            取消
+          </button>
+        ) : (
+          <Link
+            href="/classes"
+            className="w-full rounded-lg border px-5 py-2.5 text-center font-bold sm:w-auto"
+          >
+            取消
+          </Link>
+        )}
         <Submit />
       </div>
     </form>

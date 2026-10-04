@@ -74,6 +74,7 @@ export function buildStudentListResult(
   const pageSize = Number.isInteger(query.pageSize) && query.pageSize > 0 ? query.pageSize : 20;
   const rows = filteredStudents.slice((page - 1) * pageSize, page * pageSize).map((student) => ({
     ...student,
+    revision: student.revision ?? 1,
     classes: organizationEnrollments
       .filter((enrollment) => enrollment.studentId === student.id)
       .map((enrollment) => {

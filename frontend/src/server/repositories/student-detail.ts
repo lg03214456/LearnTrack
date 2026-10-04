@@ -10,13 +10,15 @@ import { classRows, students } from "@/server/data/mock/fixtures";
 import { studentProfileStore } from "@/server/data/mock/student-profile";
 import { classSessionStore } from "@/server/data/mock/class-sessions";
 import { buildStudentDetail, type StudentDetailSource } from "./student-detail-core";
+import { selectDomainRepository } from "./domain-provider";
+import { supabaseStudentDetailRepository } from "./student-detail-supabase";
 
 export interface StudentDetailRepository {
   get(
     actor: AuthorizationContext,
     studentId: string,
     filters: AssessmentFilters,
-  ): StudentDetailView | undefined;
+  ): Promise<StudentDetailView | undefined>;
 }
 
 const source = (): StudentDetailSource => ({
@@ -75,6 +77,15 @@ const source = (): StudentDetailSource => ({
   terms: curriculumStore.terms,
 });
 
+export const mockStudentDetailRepository: StudentDetailRepository = {
+  get: async (actor, studentId, filters) => buildStudentDetail(actor, studentId, filters, source()),
+};
+
 export const studentDetailRepository: StudentDetailRepository = {
-  get: (actor, studentId, filters) => buildStudentDetail(actor, studentId, filters, source()),
+  get(actor, studentId, filters) {
+    return selectDomainRepository({
+      mock: mockStudentDetailRepository,
+      supabase: supabaseStudentDetailRepository,
+    }).get(actor, studentId, filters);
+  },
 };

@@ -25,7 +25,17 @@ const input: ClassAggregateInput = {
 afterEach(() => classManagementStore.reset());
 describe("class management service", () => {
   it("creates a complete aggregate for managers", () => {
-    expect(createClass(resolveMockIdentity("owner"), input).ok).toBe(true);
+    const result = createClass(resolveMockIdentity("owner"), { ...input, code: "" });
+    expect(result.ok).toBe(true);
+    expect(result.values?.code).toBe("MAT-0001");
+  });
+  it("uses the MIX prefix when a new class has multiple subjects", () => {
+    const result = createClass(resolveMockIdentity("owner"), {
+      ...input,
+      code: "",
+      subjectIds: ["math", "english"],
+    });
+    expect(result.values?.code).toBe("MIX-0001");
   });
   it("rejects invalid or unauthorized creation", () => {
     expect(createClass(resolveMockIdentity("teacher"), input).code).toBe("FORBIDDEN");

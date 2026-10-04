@@ -126,7 +126,7 @@ Persona Cookie → IdentityProvider → AuthorizationContext
 dnd-kit 不進入 Server、Service 或 Repository；資料庫仍只接受完整 stable item ID 順序，並由 Service 驗證權限、草稿狀態與 revision。教材清單以支援滑鼠、觸控及鍵盤的拖曳把手作為唯一排序入口。
 # Student detail boundary
 
-The student detail route composes client-safe profile, guardian, multi-class, assessment, and study-plan view models. Writes enter Server Actions, then services enforce permission, organization/class scope, validation, duplicate rules, and optimistic revision. Normalized mock stores are the current persistence adapter; Supabase PostgreSQL with RLS replaces the adapter without browser components querying tenant tables directly.
+The student detail route composes client-safe profile, guardian, multi-class, assessment, and study-plan view models. Writes enter Server Actions, then services enforce permission, organization/class scope, validation, duplicate rules, and optimistic revision. Student roster mutations cross the `StudentRosterMutationRepository` contract before reaching the current Mock adapter; Supabase PostgreSQL with RLS can replace that adapter without changing the service or browser components. Other normalized Mock stores are migrated to the same boundary incrementally.
 
 ## 7. 班級管理與每日點名邊界
 

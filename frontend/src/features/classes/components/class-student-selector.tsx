@@ -18,7 +18,7 @@ export function ClassStudentSelector({
   fieldErrors?: ClassCommandResult["fieldErrors"];
 }) {
   return (
-    <Card className="p-5">
+    <Card className="min-w-0 p-4 sm:p-5">
       <h2 className="text-lg font-bold">加入學生（可選）</h2>
       <input
         aria-label="搜尋可加入學生"
@@ -29,7 +29,7 @@ export function ClassStudentSelector({
       />
       <div className="mt-3 grid max-h-64 gap-2 overflow-y-auto md:grid-cols-2">
         {students.map((student) => (
-          <label key={student.id} className="rounded-lg border p-3 text-sm">
+          <label key={student.id} className="min-w-0 rounded-lg border p-3 text-sm">
             <input
               type="checkbox"
               checked={selectedStudentIds.includes(student.id)}
@@ -42,8 +42,8 @@ export function ClassStudentSelector({
               }
               className="mr-2"
             />
-            <b>{student.label}</b>
-            <span className="ml-2 text-xs text-slate-500">{student.number}</span>
+            <b className="break-words">{student.label}</b>
+            <span className="ml-2 text-xs break-all text-slate-500">{student.number}</span>
           </label>
         ))}
       </div>

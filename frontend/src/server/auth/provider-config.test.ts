@@ -7,6 +7,7 @@ describe("authentication provider configuration", () => {
       authProvider: "mock",
       emailProvider: "mock",
       auditProvider: "mock",
+      domainDataProvider: "mock",
       isMockMode: true,
     }));
 
@@ -17,6 +18,7 @@ describe("authentication provider configuration", () => {
         LEARNTRACK_AUTH_PROVIDER: "mock",
         LEARNTRACK_EMAIL_PROVIDER: "mock",
         LEARNTRACK_AUDIT_PROVIDER: "mock",
+        LEARNTRACK_DOMAIN_DATA_PROVIDER: "mock",
       }),
     ).toThrow("AUTH_CONFIGURATION_INVALID"));
 
@@ -27,6 +29,7 @@ describe("authentication provider configuration", () => {
         LEARNTRACK_AUTH_PROVIDER: "supabase",
         LEARNTRACK_EMAIL_PROVIDER: "smtp",
         LEARNTRACK_AUDIT_PROVIDER: "postgres",
+        LEARNTRACK_DOMAIN_DATA_PROVIDER: "supabase",
       }),
     ).toThrow("AUTH_CONFIGURATION_INVALID"));
 
@@ -37,6 +40,7 @@ describe("authentication provider configuration", () => {
         LEARNTRACK_AUTH_PROVIDER: "supabase",
         LEARNTRACK_EMAIL_PROVIDER: "smtp",
         LEARNTRACK_AUDIT_PROVIDER: "postgres",
+        LEARNTRACK_DOMAIN_DATA_PROVIDER: "supabase",
         NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_test",
         SUPABASE_SECRET_KEY: "sb_secret_test",
@@ -51,6 +55,7 @@ describe("authentication provider configuration", () => {
         LEARNTRACK_AUTH_PROVIDER: "supabase",
         LEARNTRACK_EMAIL_PROVIDER: "smtp",
         LEARNTRACK_AUDIT_PROVIDER: "postgres",
+        LEARNTRACK_DOMAIN_DATA_PROVIDER: "supabase",
         NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
         NEXT_PUBLIC_SUPABASE_ANON_KEY: "legacy-public-test-key",
         SUPABASE_SECRET_KEY: "sb_secret_test",
@@ -65,6 +70,7 @@ describe("authentication provider configuration", () => {
         LEARNTRACK_AUTH_PROVIDER: "supabase",
         LEARNTRACK_EMAIL_PROVIDER: "smtp",
         LEARNTRACK_AUDIT_PROVIDER: "postgres",
+        LEARNTRACK_DOMAIN_DATA_PROVIDER: "supabase",
         NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_test",
         SUPABASE_SECRET_KEY: "sb_secret_test",
@@ -78,4 +84,19 @@ describe("authentication provider configuration", () => {
       "AUTH_CONFIGURATION_INVALID",
     );
   });
+
+  it("rejects a production Mock domain-data provider even when auth is configured", () =>
+    expect(() =>
+      parseAuthRuntimeConfig({
+        NODE_ENV: "production",
+        LEARNTRACK_AUTH_PROVIDER: "supabase",
+        LEARNTRACK_EMAIL_PROVIDER: "smtp",
+        LEARNTRACK_AUDIT_PROVIDER: "postgres",
+        LEARNTRACK_DOMAIN_DATA_PROVIDER: "mock",
+        NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_test",
+        SUPABASE_SECRET_KEY: "sb_secret_test",
+        AUTH_SITE_URL: "https://learntrack.example.test",
+      }),
+    ).toThrow("AUTH_CONFIGURATION_INVALID"));
 });

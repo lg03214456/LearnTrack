@@ -1,5 +1,6 @@
 import type { AttendanceRow } from "@/features/attendance/attendance.types";
-import type { ClassRow, ProgressRow, StudentRecord } from "@/server/domain/types";
+import type { ProgressRow } from "@/features/progress/progress.types";
+import type { ClassRow, StudentRecord } from "@/server/domain/types";
 
 export const ORG = "org-001";
 

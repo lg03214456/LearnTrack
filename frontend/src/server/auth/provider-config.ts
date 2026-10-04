@@ -5,11 +5,13 @@ import { parseSupabasePublicConfig } from "@/lib/supabase/public-config";
 export type AuthProviderKind = "mock" | "supabase";
 export type EmailProviderKind = "mock" | "smtp";
 export type AuditProviderKind = "mock" | "postgres";
+export type DomainDataProviderKind = "mock" | "supabase";
 
 export interface AuthRuntimeConfig {
   authProvider: AuthProviderKind;
   emailProvider: EmailProviderKind;
   auditProvider: AuditProviderKind;
+  domainDataProvider: DomainDataProviderKind;
   isMockMode: boolean;
 }
 
@@ -36,10 +38,16 @@ export function parseAuthRuntimeConfig(env: RuntimeEnvironment): AuthRuntimeConf
   const auditProvider =
     provider(env.LEARNTRACK_AUDIT_PROVIDER, ["mock", "postgres"] as const) ??
     (isProduction ? null : "mock");
+  const domainDataProvider =
+    provider(env.LEARNTRACK_DOMAIN_DATA_PROVIDER, ["mock", "supabase"] as const) ??
+    (isProduction ? null : "mock");
 
-  if (!authProvider || !emailProvider || !auditProvider)
+  if (!authProvider || !emailProvider || !auditProvider || !domainDataProvider)
     throw new Error("AUTH_CONFIGURATION_INVALID");
-  if (isProduction && [authProvider, emailProvider, auditProvider].includes("mock"))
+  if (
+    isProduction &&
+    ([authProvider, emailProvider, auditProvider].includes("mock") || domainDataProvider === "mock")
+  )
     throw new Error("AUTH_CONFIGURATION_INVALID");
   if (authProvider === "supabase") {
     try {
@@ -64,7 +72,12 @@ export function parseAuthRuntimeConfig(env: RuntimeEnvironment): AuthRuntimeConf
     authProvider,
     emailProvider,
     auditProvider,
-    isMockMode: authProvider === "mock" && emailProvider === "mock" && auditProvider === "mock",
+    domainDataProvider,
+    isMockMode:
+      authProvider === "mock" &&
+      emailProvider === "mock" &&
+      auditProvider === "mock" &&
+      domainDataProvider === "mock",
   };
 }
 

@@ -4,20 +4,37 @@ import { redirect } from "next/navigation";
 import type {
   ClassAggregateInput,
   ClassCommandResult,
+  ClassEditorView,
   ClassLifecycle,
   ClassType,
   WeeklyScheduleSlot,
 } from "@/features/classes/class-management.types";
 import { getAuthorizationContext } from "@/server/auth/identity";
+import { can } from "@/server/authorization/policy";
 import { getAuthProviders } from "@/server/auth/providers";
 import { executeAuditedMutation } from "@/server/audit/audit-service";
+import { classManagementRepository } from "@/server/repositories/class-management";
 import {
-  changeClassLifecycle,
-  createClass,
-  updateClass,
+  changeClassLifecycleWithConfiguredRepository,
+  saveClassWithConfiguredRepository,
 } from "@/server/services/class-management-service";
 const types: ClassType[] = ["progress", "individual", "study"],
   statuses: ClassLifecycle[] = ["recruiting", "active", "completed", "archived"];
+
+export async function loadClassCreateViewAction(): Promise<ClassEditorView | null> {
+  const actor = await getAuthorizationContext().catch(() => null);
+  if (!actor || actor.scope.kind !== "organization-wide" || !can(actor, "classes.manage"))
+    return null;
+  return classManagementRepository.editor(actor);
+}
+
+export async function loadClassEditViewAction(classId: string): Promise<ClassEditorView | null> {
+  const actor = await getAuthorizationContext().catch(() => null);
+  if (!actor || !classId || !can(actor, "classes.manage")) return null;
+  const view = await classManagementRepository.editor(actor, classId);
+  return view?.capabilities.canEdit ? view : null;
+}
+
 function parse(form: FormData): ClassAggregateInput {
   let schedules: WeeklyScheduleSlot[] = [];
   try {
@@ -68,12 +85,13 @@ export async function saveClassStateAction(
       resourceId: input.classId,
       metadata: { changedFields: input.classId ? "class-fields" : "created" },
     },
-    mutate: () => (input.classId ? updateClass(actor, input) : createClass(actor, input)),
+    mutate: () => saveClassWithConfiguredRepository(actor, input),
   });
   if (!result.ok) return result;
   revalidatePath("/classes");
   revalidatePath("/students");
   revalidatePath("/attendance");
+  if (!input.classId || form.get("returnTo") === "/classes") return redirect("/classes");
   redirect(`/classes/${result.values?.classId ?? input.classId}/edit?saved=1`);
 }
 export async function changeClassLifecycleAction(form: FormData) {
@@ -93,7 +111,7 @@ export async function changeClassLifecycleAction(form: FormData) {
       resourceId: classId,
       metadata: { nextStatus: status },
     },
-    mutate: () => changeClassLifecycle(actor, classId, revision, status),
+    mutate: () => changeClassLifecycleWithConfiguredRepository(actor, classId, revision, status),
   });
   if (result.ok) {
     revalidatePath("/classes");

@@ -13,6 +13,7 @@ function initialState(row: StudentListRow): StudentLifecycleCommandResult {
     message: "",
     values: {
       studentId: row.id,
+      revision: row.revision,
       intent: row.status === "archived" ? "restore" : "archive",
       reason: "",
     },
@@ -76,6 +77,7 @@ export function StudentLifecycleControl({ row }: { row: StudentListRow }) {
               </div>
               <form action={action} className="space-y-4 p-5">
                 <input type="hidden" name="studentId" value={row.id} />
+                <input type="hidden" name="revision" value={row.revision} />
                 <input type="hidden" name="intent" value={isArchived ? "restore" : "archive"} />
                 {isArchived ? (
                   <div className="rounded-lg bg-teal-50 p-4 text-sm leading-6 text-teal-900">

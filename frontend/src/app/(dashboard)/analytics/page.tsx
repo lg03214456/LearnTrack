@@ -7,8 +7,8 @@ import { dashboardRepository } from "@/server/repositories/dashboard";
 export default async function Page() {
   const actor = await getAuthorizationContext().catch(() => null);
   if (!actor || !can(actor, "analytics.read")) return <AccessDenied />;
-  const ids = actor.scope.kind === "assigned-classes" ? actor.scope.classIds : undefined,
-    data = await dashboardRepository.analytics(actor.organizationId, ids);
+  const classIds = actor.scope.kind === "assigned-classes" ? actor.scope.classIds : undefined,
+    analytics = await dashboardRepository.analytics(actor.organizationId, classIds);
   return (
     <>
       <PageHeader
@@ -16,7 +16,7 @@ export default async function Page() {
         title="學習表現總覽"
         description="掌握全校學生的學習趨勢、進度與各科表現。"
       />
-      <AnalyticsView data={data} />
+      <AnalyticsView analytics={analytics} />
     </>
   );
 }

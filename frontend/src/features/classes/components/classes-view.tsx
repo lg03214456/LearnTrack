@@ -2,9 +2,14 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { BookOpen, CalendarCheck2, Clock, FlaskConical, Pencil, Plus, Users } from "lucide-react";
-import { changeClassLifecycleAction } from "@/app/actions/class-management-actions";
+import {
+  changeClassLifecycleAction,
+  loadClassCreateViewAction,
+  loadClassEditViewAction,
+} from "@/app/actions/class-management-actions";
 import { Card, ProgressBar } from "@/components/ui";
-import type { ClassOverviewRow } from "../class-management.types";
+import type { ClassEditorView, ClassOverviewRow } from "../class-management.types";
+import { ClassEditorDialog } from "./class-editor-dialog";
 const typeLabels = { progress: "進度授課班", individual: "個別指導班", study: "自習加強班" },
   statusLabels = {
     recruiting: "招生中",
@@ -15,8 +20,33 @@ const typeLabels = { progress: "進度授課班", individual: "個別指導班",
   days = ["日", "一", "二", "三", "四", "五", "六"];
 export function ClassesView({ rows, canCreate }: { rows: ClassOverviewRow[]; canCreate: boolean }) {
   const [search, setSearch] = useState(""),
-    [grade, setGrade] = useState("");
-  const visible = useMemo(
+    [grade, setGrade] = useState(""),
+    [editorView, setEditorView] = useState<ClassEditorView | null>(null),
+    [loadingEditorId, setLoadingEditorId] = useState<string | null>(null),
+    [editorViewError, setEditorViewError] = useState("");
+  const handleOpenCreateDialog = async () => {
+    setLoadingEditorId("new");
+    setEditorViewError("");
+    const view = await loadClassCreateViewAction();
+    setLoadingEditorId(null);
+    if (!view) {
+      setEditorViewError("無法載入新增班級表單，請重新登入後再試。");
+      return;
+    }
+    setEditorView(view);
+  };
+  const handleOpenEditDialog = async (classId: string) => {
+    setLoadingEditorId(classId);
+    setEditorViewError("");
+    const view = await loadClassEditViewAction(classId);
+    setLoadingEditorId(null);
+    if (!view) {
+      setEditorViewError("無法載入班級資料，請重新整理後再試。");
+      return;
+    }
+    setEditorView(view);
+  };
+  const filteredClasses = useMemo(
     () =>
       rows.filter(
         (x) =>
@@ -29,15 +59,25 @@ export function ClassesView({ rows, canCreate }: { rows: ClassOverviewRow[]; can
     <>
       <div className="mb-4 flex justify-end">
         {canCreate && (
-          <Link
-            href="/classes/new"
+          <button
+            type="button"
+            disabled={loadingEditorId !== null}
+            onClick={handleOpenCreateDialog}
             className="inline-flex items-center gap-2 rounded-lg bg-teal-800 px-4 py-2.5 text-sm font-bold text-white"
           >
             <Plus size={16} />
-            新增班級
-          </Link>
+            {loadingEditorId === "new" ? "載入中…" : "新增班級"}
+          </button>
         )}
       </div>
+      {editorViewError && (
+        <p
+          role="status"
+          className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+        >
+          {editorViewError}
+        </p>
+      )}
       <Card className="flex flex-wrap gap-3 p-4">
         <input
           aria-label="搜尋班級"
@@ -59,7 +99,7 @@ export function ClassesView({ rows, canCreate }: { rows: ClassOverviewRow[]; can
         </select>
       </Card>
       <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {visible.map((row, index) => (
+        {filteredClasses.map((row, index) => (
           <Card key={row.id} className="p-5">
             <div className="flex items-start gap-3">
               <span className="rounded-lg bg-blue-50 p-3 text-blue-600">
@@ -137,13 +177,15 @@ export function ClassesView({ rows, canCreate }: { rows: ClassOverviewRow[]; can
                 查看名單
               </Link>
               {row.capabilities.canEdit && (
-                <Link
-                  href={`/classes/${row.id}/edit`}
+                <button
+                  type="button"
+                  disabled={loadingEditorId !== null}
+                  onClick={() => handleOpenEditDialog(row.id)}
                   className="rounded-lg border px-3 py-2 text-xs font-bold"
                 >
                   <Pencil size={13} className="mr-1 inline" />
-                  編輯
-                </Link>
+                  {loadingEditorId === row.id ? "載入中…" : "編輯"}
+                </button>
               )}
               {row.capabilities.canChangeLifecycle && row.status !== "archived" && (
                 <form action={changeClassLifecycleAction}>
@@ -173,9 +215,10 @@ export function ClassesView({ rows, canCreate }: { rows: ClassOverviewRow[]; can
           </Card>
         ))}
       </div>
-      {!visible.length && (
+      {!filteredClasses.length && (
         <Card className="mt-5 p-12 text-center text-slate-500">沒有符合條件的班級</Card>
       )}
+      {editorView && <ClassEditorDialog view={editorView} onClose={() => setEditorView(null)} />}
     </>
   );
 }

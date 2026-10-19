@@ -2,10 +2,15 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Plus, X } from "lucide-react";
-import { addTemplateItemStateAction, publishVersionAction } from "@/app/actions/curriculum-actions";
+import {
+  addTemplateItemStateAction,
+  publishVersionAction,
+  copyVersionAction,
+} from "@/app/actions/curriculum-actions";
 import { Card } from "@/components/ui";
 import type { CurriculumDetail, CurriculumItemFormState } from "../curriculum.types";
 import { CurriculumSortableList, itemTypeLabels } from "./curriculum-sortable-list";
+import { CurriculumTemplateDelete } from "./curriculum-template-delete";
 
 const initialState: CurriculumItemFormState = {
   ok: false,
@@ -113,7 +118,7 @@ export function CurriculumDetailView({
   data: CurriculumDetail;
   canManage: boolean;
 }) {
-  const canEdit = canManage && data.status === "draft";
+  const canEdit = canManage && data.status === "draft" && !data.template.isArchived;
   const [isAddingItem, setIsAddingItem] = useState(false);
   return (
     <>
@@ -133,10 +138,26 @@ export function CurriculumDetailView({
           {canEdit && (
             <form action={publishVersionAction} className="ml-auto">
               <input type="hidden" name="versionId" value={data.versionId} />
+              <input type="hidden" name="revision" value={data.revision} />
               <SubmitButton className="rounded-lg bg-teal-800 px-4 py-2 text-sm text-white">
                 發布版本
               </SubmitButton>
             </form>
+          )}
+          {canManage && !data.template.isArchived && (
+            <form action={copyVersionAction} className={canEdit ? "" : "ml-auto"}>
+              <input type="hidden" name="versionId" value={data.versionId} />
+              <input type="hidden" name="revision" value={data.revision} />
+              <SubmitButton className="rounded-lg border border-teal-700 px-4 py-2 text-sm text-teal-800">
+                複製為新草稿
+              </SubmitButton>
+            </form>
+          )}
+          {canManage && !data.template.isArchived && (
+            <CurriculumTemplateDelete template={data.template} />
+          )}
+          {data.template.isArchived && (
+            <span className="pill bg-slate-100 text-slate-600">已封存・唯讀</span>
           )}
         </div>
       </Card>

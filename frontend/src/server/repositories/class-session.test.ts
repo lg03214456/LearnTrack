@@ -4,7 +4,7 @@ import { classManagementStore } from "@/server/data/mock/class-management";
 import { classSessionStore } from "@/server/data/mock/class-sessions";
 import { curriculumStore } from "@/server/data/mock/curriculum";
 import { students } from "@/server/data/mock/fixtures";
-import { classSessionRepository } from "./class-session";
+import { mockClassSessionRepository as classSessionRepository } from "./class-session";
 
 describe("class session repository", () => {
   beforeEach(() => {

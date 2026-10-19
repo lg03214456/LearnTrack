@@ -23,9 +23,11 @@
 | 可重設的班級假資料 | `frontend/src/server/data/mock/class-management.ts`，只供 Mock provider／測試使用 |
 | Enrollment 關聯 | `frontend/src/server/data/mock/relations.ts` |
 | 課堂、成員快照與學生進度歷史 | `frontend/src/server/data/mock/class-sessions.ts` |
-| 今日課堂 JOIN 與 View Model | `frontend/src/server/repositories/class-session.ts`、`class-session-core.ts` |
-| 課堂進度權限、原子批次與更正 | `frontend/src/server/services/class-session-service.ts` |
+| 今日課堂 provider、Supabase RPC 與 Mock View Model | `frontend/src/server/repositories/class-session.ts`、`class-session-supabase.ts`、`class-session-core.ts` |
+| 課堂進度 provider service／Mock 業務規則 | `frontend/src/server/services/class-session-persistence-service.ts`、`class-session-service.ts` |
+| 今日課堂原子交易、名單快照、revision 與歷史防覆寫 | `frontend/supabase/migrations/202610100001_class_session_functions.sql` |
 | 課堂進度 Server Actions | `frontend/src/app/actions/class-session-actions.ts` |
+| 課堂日期自動切換、transition 載入與操作鎖定 | `frontend/src/features/class-sessions/components/class-session-date-navigation.tsx` |
 | 點名 Client-safe contracts | `frontend/src/features/attendance/attendance.types.ts` |
 | 指定日期／班級點名 View Model | `frontend/src/server/repositories/attendance.ts`、`attendance-core.ts` |
 | 班級基本資料欄位 | `frontend/src/features/classes/components/class-basic-fields.tsx` |
@@ -45,4 +47,12 @@
 
 班級不保存教材版本。今日課堂只以 Enrollment 建立當次成員快照，再依每位學生自己的 active Study Plan 取得教材與學習項目；`本次不更新` 不產生進度紀錄。
 
-草稿課堂以一個批次按鈕統一更新所有畫面暫存進度。完成課堂若有漏登，可批次新增進度並填寫一次補登原因；後端 append `StudentSessionProgress`，不覆蓋既有歷史。既有紀錄內容錯誤則維持逐筆 successor 更正。
+Supabase 模式下只讀取真正的 `study_plans` 與 `student_learning_items`，不把記憶體計畫混入資料庫課堂。教材與計畫編輯 adapter 尚未整體切換；若計畫只建在 Mock，今日課堂會呈現尚未設定教材。`/attendance` 的編輯器接線仍是獨立待辦，不能因今日課堂顯示資料庫出勤就視為點名儲存已完成。
+
+今日課堂主要入口為「學生進度」姓名按鈕：`student-progress-checklist-dialog.tsx` 按學生 active plan/version 分組，既有 completed 項目 readonly，`progress-checklist.ts` 只把新勾選項目組成 completed entries。確認直接走原 audited save/append action；成功 refresh，不合成 revision，不需第二次批次儲存。取消不寫入，conflict／uncertain 需重新載入確認。詳見 `frontend/docs/class-progress-checklist-verification.md`。
+
+依使用者後續確認，今日課堂不再掛載「進階登記／統一更新課堂進度」，只保留姓名勾選後直接確認儲存。舊 batch component／actions 暫保留相容性，未刪除後端或任何紀錄。完成課堂漏登仍填補登原因並 append `StudentSessionProgress`，既有紀錄內容錯誤維持逐筆 successor 更正。
+
+今日課堂「課堂點名」由 `class-attendance-dialog.tsx` 開啟四種單選狀態，透過 `class-attendance-actions.ts` → `class-attendance-service.ts` → `class-attendance.ts`／`class-attendance-mock.ts` 儲存。權限獨立使用 attendance.read/manage；未變更者不送出，不會預設全員出席。遲到可選填實際到課時間（課堂日期＋Asia/Taipei），不同於伺服器登記時間。更正或已完成課堂補登須填原因；原子交易驗證 lesson revision／previousRecordId 並 append successor。調課仍未實作，不會自動歸為請假／缺席。
+
+`202610190001_class_attendance_and_history.sql` 增加 arrived_at 與兩個 user-JWT RPC，撤銷 attendance 直表寫入權限，保留 RLS SELECT 和 append-only trigger。缺少此 migration 時仍讀原本真實 progress RPC，但點名停用並明確提示，不 fallback Mock。`session-history.ts` 依 studentId、studyPlanId/versionId 分組，以 student_learning_items.position 排序、保留更正鏈；時間只顯示不排序。詳見 `frontend/docs/class-attendance-verification.md`。

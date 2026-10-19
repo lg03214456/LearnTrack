@@ -1,12 +1,19 @@
 import Link from "next/link";
-import { BookOpen, MoreVertical } from "lucide-react";
+import { BookOpen } from "lucide-react";
+import { CurriculumTemplateActions } from "./curriculum-template-actions";
 import { Card } from "@/components/ui";
 import type { CurriculumDirectory, VersionStatus } from "../curriculum.types";
 
 const statusLabel: Record<VersionStatus, string> = { draft: "草稿", published: "已發布" };
 type CurriculumRow = CurriculumDirectory["rows"][number];
 
-export function CurriculumTemplateCard({ row }: { row: CurriculumRow }) {
+export function CurriculumTemplateCard({
+  row,
+  canManage = false,
+}: {
+  row: CurriculumRow;
+  canManage?: boolean;
+}) {
   return (
     <Card className="p-5">
       <div className="flex items-start gap-3">
@@ -19,12 +26,7 @@ export function CurriculumTemplateCard({ row }: { row: CurriculumRow }) {
           </p>
           <h2 className="mt-1 font-bold">{row.name}</h2>
         </div>
-        <button
-          aria-label={`${row.name}更多操作`}
-          className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
-        >
-          <MoreVertical size={17} />
-        </button>
+        {canManage && !row.isArchived && <CurriculumTemplateActions row={row} />}
       </div>
       <div className="mt-4 space-y-2">
         {row.versions.map((version) => (

@@ -6,6 +6,7 @@ import type {
   ClassCommandResult,
   ClassEditorView,
   ClassLifecycle,
+  ClassRosterView,
   ClassType,
   WeeklyScheduleSlot,
 } from "@/features/classes/class-management.types";
@@ -33,6 +34,12 @@ export async function loadClassEditViewAction(classId: string): Promise<ClassEdi
   if (!actor || !classId || !can(actor, "classes.manage")) return null;
   const view = await classManagementRepository.editor(actor, classId);
   return view?.capabilities.canEdit ? view : null;
+}
+
+export async function loadClassRosterViewAction(classId: string): Promise<ClassRosterView | null> {
+  const actor = await getAuthorizationContext().catch(() => null);
+  if (!actor || !classId) return null;
+  return classManagementRepository.roster(actor, classId);
 }
 
 function parse(form: FormData): ClassAggregateInput {

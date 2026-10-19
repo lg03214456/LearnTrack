@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import {
   loadClassCreateViewAction,
   loadClassEditViewAction,
+  loadClassRosterViewAction,
   saveClassStateAction,
 } from "./class-management-actions";
 import { classManagementRepository } from "@/server/repositories/class-management";
@@ -21,7 +22,7 @@ vi.mock("@/server/auth/identity", () => ({
 }));
 vi.mock("@/server/authorization/policy", () => ({ can: vi.fn(() => true) }));
 vi.mock("@/server/repositories/class-management", () => ({
-  classManagementRepository: { editor: vi.fn() },
+  classManagementRepository: { editor: vi.fn(), roster: vi.fn() },
 }));
 vi.mock("@/server/services/class-management-service", () => ({
   saveClassWithConfiguredRepository: vi.fn(),
@@ -45,6 +46,17 @@ describe("class management actions", () => {
 
     await expect(loadClassEditViewAction("class-a")).resolves.toBe(view);
     expect(classManagementRepository.editor).toHaveBeenCalledWith(
+      expect.objectContaining({ organizationId: "org-001" }),
+      "class-a",
+    );
+  });
+
+  it("loads an accessible class roster through the repository boundary", async () => {
+    const view = { classId: "class-a", students: [] } as never;
+    vi.mocked(classManagementRepository.roster).mockResolvedValue(view);
+
+    await expect(loadClassRosterViewAction("class-a")).resolves.toBe(view);
+    expect(classManagementRepository.roster).toHaveBeenCalledWith(
       expect.objectContaining({ organizationId: "org-001" }),
       "class-a",
     );

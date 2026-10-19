@@ -25,6 +25,12 @@ None.
 
 ## Impact
 
+Approved UI refinement (2026-10-19): the primary daily progress interaction becomes a student-name-triggered checklist dialog. Selecting items marks them completed only on confirmation; unselected and previously completed items remain unchanged. Existing status/batch entry and successor correction remain available as secondary operations.
+
+Subsequent approved simplification: the visible secondary batch editor/unified-save button is removed, leaving direct student confirmation and history correction. Backend compatibility code and persisted records remain.
+
+Approved preview follow-up: add a four-status attendance dialog with optional actual late-arrival time, separate from record time. Save changes atomically with attendance permissions and append-only corrections. Group progress history by student and original plan/version/item position, displaying timestamps without using them to order items. Rescheduling remains unresolved and excluded; no simulated reschedule is persisted. Supply an additive Supabase migration; do not apply it to shared data automatically.
+
 - Adds `/classes/[classId]` as the class workspace and links class cards to its daily-session entry point while retaining the existing filtered student-list action.
 - Adds client-safe class-session/progress contracts, UI components, Server Actions, services, repositories, normalized mock records, and focused tests.
 - Reads existing class enrollment, attendance, student study-plan, curriculum-version, and student-learning-item data without introducing a class-level curriculum binding.

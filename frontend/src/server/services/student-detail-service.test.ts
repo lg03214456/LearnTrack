@@ -3,6 +3,7 @@ import { resolveMockIdentity } from "@/server/auth/identity-core";
 import { studentProfileStore } from "@/server/data/mock/student-profile";
 import {
   correctAssessmentResult,
+  recordExtraAssessmentResult,
   recordAssessmentResult,
   updateStudentProfile,
 } from "./student-detail-service";
@@ -85,6 +86,43 @@ describe("student detail commands", () => {
       revision: 1,
       updatedBy: "teacher",
     });
+  });
+
+  it("creates an extra assessment and its student result atomically in the mock store", () => {
+    const outcome = recordExtraAssessmentResult(resolveMockIdentity("teacher"), {
+      studentId: "stu-1",
+      termId: "115-1",
+      subject: "數學",
+      title: "第一次段考",
+      date: "2026-10-07",
+      maximumScore: 100,
+      score: 86,
+      comment: "應用題需複習",
+    });
+    expect(outcome.ok).toBe(true);
+    const assessment = studentProfileStore.assessments.at(-1)!;
+    expect(assessment).toMatchObject({ title: "第一次段考", maximumScore: 100 });
+    expect(studentProfileStore.results.at(-1)).toMatchObject({
+      assessmentId: assessment.id,
+      studentId: "stu-1",
+      score: 86,
+    });
+  });
+
+  it("rejects an extra assessment score above its maximum", () => {
+    const before = studentProfileStore.assessments.length;
+    const outcome = recordExtraAssessmentResult(resolveMockIdentity("teacher"), {
+      studentId: "stu-1",
+      termId: "115-1",
+      subject: "數學",
+      title: "錯誤測驗",
+      date: "2026-10-07",
+      maximumScore: 50,
+      score: 51,
+      comment: "",
+    });
+    expect(outcome.code).toBe("VALIDATION_ERROR");
+    expect(studentProfileStore.assessments).toHaveLength(before);
   });
 
   it("corrects in place and rejects stale or cross-scope changes", () => {

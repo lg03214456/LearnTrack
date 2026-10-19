@@ -48,6 +48,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Sea
         description="管理學生基本資料、班級與在籍狀態。"
       />
       <StudentsView
+        contextKey={`${actor.organizationId}:${actor.membershipId}`}
         result={result}
         query={query}
         canManageStudents={

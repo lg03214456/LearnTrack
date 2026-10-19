@@ -1,15 +1,18 @@
 import { Card } from "@/components/ui";
 import type { AssessmentFilters, StudentDetailView } from "../student-profile.types";
 import { AssessmentReportDownload } from "./student-report-downloads";
+import { AssessmentEntryActions, AssessmentCorrectionButton } from "./student-detail-management";
 
 export function StudentAssessmentHistory({
   detail,
   filters,
   classId,
+  canManageAssessments = false,
 }: {
   detail: StudentDetailView;
   filters: AssessmentFilters;
   classId?: string;
+  canManageAssessments?: boolean;
 }) {
   const { assessment } = detail;
   return (
@@ -33,6 +36,11 @@ export function StudentAssessmentHistory({
           ))}
         </div>
       </div>
+      {canManageAssessments && (
+        <div className="flex justify-end border-b px-5 py-4">
+          <AssessmentEntryActions detail={detail} />
+        </div>
+      )}
       <form method="get" className="flex flex-wrap items-end gap-3 border-b px-5 py-4">
         <input type="hidden" name="tab" value="assessments" />
         {classId && <input type="hidden" name="classId" value={classId} />}
@@ -65,40 +73,48 @@ export function StudentAssessmentHistory({
           rows={assessment.exportRows}
         />
       </form>
-      <div className="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>日期</th>
-              <th>科目／考試</th>
-              <th>成績</th>
-              <th>換算</th>
-              <th>老師評語</th>
-            </tr>
-          </thead>
-          <tbody>
-            {assessment.rows.map((row) => (
-              <tr key={row.id}>
-                <td>{row.date}</td>
-                <td>
-                  <b>{row.subject}</b>
-                  <small className="block text-slate-500">{row.title}</small>
-                </td>
-                <td>
-                  <b>{row.score}</b> / {row.maximumScore}
-                </td>
-                <td>
-                  <span
-                    className={`pill ${row.percentage >= 80 ? "bg-emerald-50 text-emerald-700" : row.percentage >= 60 ? "bg-amber-50 text-amber-700" : "bg-red-50 text-red-600"}`}
-                  >
-                    {row.percentage}%
-                  </span>
-                </td>
-                <td className="max-w-64 whitespace-normal text-slate-600">{row.comment || "—"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="grid min-w-0 gap-4 p-5 lg:grid-cols-2" aria-label="成績紀錄">
+        {assessment.rows.map((row) => (
+          <article
+            key={row.id}
+            aria-label={`${row.subject}・${row.title}`}
+            className="min-w-0 rounded-xl border border-slate-200 bg-white p-4"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-xs font-bold text-teal-700">
+                {row.subject} · {row.termId}
+              </span>
+              <time className="text-xs text-slate-500" dateTime={row.date}>
+                {row.date}
+              </time>
+            </div>
+            <h3 className="mt-2 text-base font-bold break-words">{row.title}</h3>
+            <div className="my-4 flex items-center gap-3">
+              <p className="text-2xl font-bold tabular-nums">
+                <span>{row.score}</span>
+                <span className="ml-1 text-sm font-normal text-slate-500">
+                  / {row.maximumScore}
+                </span>
+              </p>
+              <span
+                className={`pill ${row.percentage >= 80 ? "bg-emerald-50 text-emerald-700" : row.percentage >= 60 ? "bg-amber-50 text-amber-700" : "bg-red-50 text-red-600"}`}
+              >
+                {row.percentage}%
+              </span>
+            </div>
+            <div className="rounded-lg bg-slate-50 p-3">
+              <p className="text-xs text-slate-500">老師評語</p>
+              <p className="mt-1 text-sm break-words whitespace-pre-wrap text-slate-700">
+                {row.comment || "尚無評語"}
+              </p>
+            </div>
+            {canManageAssessments && (
+              <div className="mt-3 flex justify-end">
+                <AssessmentCorrectionButton studentId={detail.profile.id} row={row} />
+              </div>
+            )}
+          </article>
+        ))}
       </div>
       {!assessment.rows.length && (
         <div className="p-12 text-center text-slate-500">沒有符合條件的考試紀錄</div>

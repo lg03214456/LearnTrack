@@ -13,6 +13,7 @@ function clientWith(dataByTable: Record<string, unknown[]>) {
           filters.push([table, column, value]);
           return query;
         },
+        in: () => query,
         then: (resolve: (value: typeof result) => unknown) => Promise.resolve(result).then(resolve),
       };
       return query;
@@ -30,6 +31,67 @@ describe("Supabase dashboard progress repository", () => {
     expect(
       stub.filters.every(([, column, value]) => column === "organization_id" && value === "org-a"),
     ).toBe(true);
+  });
+
+  it("returns empty analytics instead of preset values when no durable records exist", async () => {
+    const stub = clientWith({ course_classes: [{ id: "class-a", name: "測試班" }] });
+    const repository = new SupabaseDashboardRepository(async () => stub.client);
+
+    await expect(repository.analytics("org-a")).resolves.toMatchObject({
+      hasData: false,
+      averageScore: null,
+      completion: null,
+      excellentStudents: 0,
+      atRisk: 0,
+      trend: [],
+      classes: [
+        {
+          name: "測試班",
+          progress: null,
+          score: null,
+          status: "尚無紀錄",
+        },
+      ],
+    });
+  });
+
+  it("derives analytics from persisted assessments and progress", async () => {
+    const stub = clientWith({
+      student_session_progress: [
+        {
+          id: "p1",
+          class_session_id: "session-a",
+          student_id: "student-a",
+          learning_item_id: "item-a",
+          status_after_session: "completed",
+          recorded_at: "2026-10-01T00:00:00Z",
+        },
+      ],
+      class_sessions: [{ id: "session-a", class_id: "class-a" }],
+      students: [{ id: "student-a", student_number: "STU-0001", display_name: "學生甲" }],
+      course_classes: [{ id: "class-a", name: "測試班" }],
+      assessments: [
+        {
+          id: "assessment-a",
+          class_id: "class-a",
+          assessment_date: "2026-10-02",
+          maximum_score: 100,
+        },
+      ],
+      assessment_results: [{ assessment_id: "assessment-a", student_id: "student-a", score: 90 }],
+      class_assignments: [],
+    });
+    const repository = new SupabaseDashboardRepository(async () => stub.client);
+
+    await expect(repository.analytics("org-a")).resolves.toMatchObject({
+      hasData: true,
+      averageScore: 90,
+      completion: 100,
+      excellentStudents: 1,
+      atRisk: 0,
+      trend: [{ month: "2026-10", score: 90 }],
+      classes: [{ name: "測試班", progress: 100, score: 90, status: "穩定正常" }],
+    });
   });
 
   it("derives current completion and excludes superseded records", async () => {

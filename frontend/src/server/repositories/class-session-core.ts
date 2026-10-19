@@ -7,6 +7,7 @@ import type {
 import type { ClassEntity, ClassEnrollment } from "@/server/data/mock/class-management";
 import type {
   ClassSessionMemberRecord,
+  ClassAttendanceRecord,
   ClassSessionRecord,
   StudentSessionProgressRecord,
 } from "@/server/data/mock/class-sessions";
@@ -26,6 +27,7 @@ export interface ClassSessionSource {
   session: ClassSessionRecord;
   members: ClassSessionMemberRecord[];
   progress: StudentSessionProgressRecord[];
+  attendance?: ClassAttendanceRecord[];
   students: StudentRecord[];
   enrollments: ClassEnrollment[];
   plans: StudyPlan[];
@@ -67,6 +69,11 @@ export function buildClassDailyWorkspace(
         studentId: entry.studentId,
         studentName: student?.name ?? "未知學生",
         planLabel: template?.name ?? "未知教材",
+        studyPlanId: entry.studyPlanId,
+        versionId: plan?.versionId,
+        versionLabel: version ? `版本 ${version.number}` : undefined,
+        learningItemId: entry.learningItemId,
+        itemPosition: learningItem?.position,
         learningItemTitle: learningItem?.title ?? "未知項目",
         statusAfterSession: entry.statusAfterSession,
         note: entry.note,
@@ -76,8 +83,7 @@ export function buildClassDailyWorkspace(
         correctionReason: entry.correctionReason,
         revision: entry.revision,
       };
-    })
-    .sort((a, b) => b.recordedAt.localeCompare(a.recordedAt));
+    });
 
   const members: ClassSessionMemberView[] = source.members
     .filter(
@@ -86,6 +92,14 @@ export function buildClassDailyWorkspace(
         member.classSessionId === source.session.id,
     )
     .map((member) => {
+      const attendance = can(actor, "attendance.read")
+        ? source.attendance?.find(
+            (record) =>
+              record.organizationId === actor.organizationId &&
+              record.sessionMemberId === member.id &&
+              !source.attendance?.some((successor) => successor.supersedesId === record.id),
+          )
+        : undefined;
       const student = source.students.find((item) => item.id === member.studentId)!;
       const plans = source.plans
         .filter(
@@ -102,9 +116,16 @@ export function buildClassDailyWorkspace(
             label: `${findName(source.subjects, plan.subjectId)}・${template?.name ?? "未命名教材"}`,
             versionLabel: `${findName(source.publishers, template?.publisherId ?? "")}・版本 ${version?.number ?? "-"}`,
             items: source.learningItems
-              .filter((item) => item.planId === plan.id && item.status !== "skipped")
+              .filter(
+                (item) => item.planId === plan.id && !["skipped", "removed"].includes(item.status),
+              )
               .sort((a, b) => a.position - b.position)
-              .map(({ id, title, status, revision }) => ({ id, title, status, revision })),
+              .map(({ id, title, status, revision }) => ({
+                id,
+                title,
+                status: status as Exclude<typeof status, "skipped" | "removed">,
+                revision,
+              })),
           };
         });
       return {
@@ -112,7 +133,17 @@ export function buildClassDailyWorkspace(
         studentId: member.studentId,
         studentName: student?.name ?? "未知學生",
         studentNumber: student?.number ?? "—",
-        attendanceStatus: member.attendanceStatus,
+        attendanceStatus: can(actor, "attendance.read")
+          ? (attendance?.status ?? member.attendanceStatus)
+          : "pending",
+        attendance: attendance
+          ? {
+              id: attendance.id,
+              arrivedAt: attendance.arrivedAt,
+              recordedAt: attendance.recordedAt,
+              revision: attendance.revision,
+            }
+          : undefined,
         plans,
         needsPlanSetup: plans.length === 0,
         history: history.filter((entry) => entry.studentId === member.studentId),
@@ -134,5 +165,10 @@ export function buildClassDailyWorkspace(
     members,
     history,
     canManage: can(actor, "progress.manage") && canAccessClass(actor, source.courseClass.id),
+    attendanceAvailable: true,
+    canManageAttendance:
+      can(actor, "attendance.read") &&
+      can(actor, "attendance.manage") &&
+      canAccessClass(actor, source.courseClass.id),
   };
 }

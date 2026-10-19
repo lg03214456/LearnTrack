@@ -115,6 +115,7 @@ export const progressRows: ProgressRow[] = [
   ["stu-6", "許哲維", "STU-0006", "高中物理進階班", 80, 8, 10, 88, "ahead", "今天"],
 ].map((row) => ({
   studentId: row[0] as string,
+  classId: classRows.find((courseClass) => courseClass.name === row[3])!.id,
   name: row[1] as string,
   number: row[2] as string,
   className: row[3] as string,

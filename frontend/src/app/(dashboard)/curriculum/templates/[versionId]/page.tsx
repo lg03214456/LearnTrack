@@ -14,7 +14,7 @@ export default async function Page({
 }) {
   const actor = await getAuthorizationContext().catch(() => null);
   if (!actor || !can(actor, "curriculum.read")) return <AccessDenied />;
-  const data = curriculumRepository.detail(actor, (await params).versionId),
+  const data = await curriculumRepository.detail(actor, (await params).versionId),
     query = await searchParams;
   if (!data) notFound();
   return (

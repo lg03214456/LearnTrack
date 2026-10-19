@@ -36,11 +36,30 @@ describe("curriculum service", () => {
     );
   });
   it("keeps archived assignments readable but unavailable to new plans", () => {
+    const versions = structuredClone(curriculumStore.versions);
+    const items = structuredClone(curriculumStore.items);
+    const plans = structuredClone(curriculumStore.plans);
+    const learningItems = structuredClone(curriculumStore.learningItems);
     expect(archiveTemplate(owner, "tpl-eng").ok).toBe(true);
+    expect(curriculumStore.versions).toEqual(versions);
+    expect(curriculumStore.items).toEqual(items);
+    expect(curriculumStore.plans).toEqual(plans);
+    expect(curriculumStore.learningItems).toEqual(learningItems);
     expect(curriculumStore.plans.find((x) => x.id === "plan-2")).toBeDefined();
     expect(
       createAndActivatePlan(owner, { studentId: "stu-2", termId: "115-2", versionId: "ver-eng-1" }),
     ).toMatchObject({ ok: false, code: "VALIDATION_ERROR" });
+  });
+  it("rejects archiving without permission or outside the actor organization", () => {
+    expect(archiveTemplate({ ...owner, permissions: [] }, "tpl-eng")).toMatchObject({
+      ok: false,
+      code: "FORBIDDEN",
+    });
+    expect(archiveTemplate({ ...owner, organizationId: "other" }, "tpl-eng")).toMatchObject({
+      ok: false,
+      code: "NOT_FOUND",
+    });
+    expect(curriculumStore.templates.find((t) => t.id === "tpl-eng")?.isArchived).toBe(false);
   });
   it("materializes a snapshot that is independent from later source changes", () => {
     const result = createAndActivatePlan(owner, {
@@ -59,6 +78,38 @@ describe("curriculum service", () => {
     expect(curriculumStore.learningItems.find((x) => x.id === snapshot[0].id)?.title).not.toBe(
       "來源後續修正",
     );
+  });
+  it("replaces an active plan, carries completed lineage, and softly removes unfinished items", () => {
+    expect(publishVersion(owner, "ver-math-2").ok).toBe(true);
+    const currentPlan = curriculumStore.plans.find((plan) => plan.id === "plan-1")!;
+    const completedBefore = curriculumStore.learningItems.filter(
+      (item) => item.planId === currentPlan.id && item.status === "completed",
+    );
+
+    const result = createAndActivatePlan(owner, {
+      studentId: "stu-1",
+      termId: "115-1",
+      versionId: "ver-math-2",
+    });
+
+    expect(result).toMatchObject({ ok: true, message: "修課計畫已更換" });
+    const replacedPlan = curriculumStore.plans.find((plan) => plan.id === currentPlan.id)!;
+    expect(replacedPlan).toMatchObject({
+      status: "replaced",
+    });
+    expect(
+      curriculumStore.learningItems.filter(
+        (item) => item.planId === currentPlan.id && item.status === "removed",
+      ),
+    ).not.toHaveLength(0);
+    const replacement = curriculumStore.plans.find(
+      (plan) => plan.id === replacedPlan.replacedByPlanId,
+    )!;
+    const carried = curriculumStore.learningItems.filter(
+      (item) => item.planId === replacement.id && item.status === "completed",
+    );
+    expect(carried).toHaveLength(completedBefore.length);
+    expect(carried.every((item) => item.carriedFromItemId)).toBe(true);
   });
   it("edits and reorders only drafts with optimistic revision checks", () => {
     const edited = updateTemplateItem(owner, {

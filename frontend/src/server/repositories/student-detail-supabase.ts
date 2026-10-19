@@ -2,7 +2,10 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AuthorizationContext } from "@/features/access-control/access-control.types";
-import type { AssessmentFilters } from "@/features/student-profile/student-profile.types";
+import type {
+  AssessmentFilters,
+  StudentDetailReadOptions,
+} from "@/features/student-profile/student-profile.types";
 import type { ClassRow, Enrollment, StudentRecord } from "@/server/domain/types";
 import { createCurrentUserSupabaseClient } from "@/server/supabase/user-session-client";
 import { buildStudentDetail, type StudentDetailSource } from "./student-detail-core";
@@ -14,9 +17,15 @@ type Row = Record<string, unknown>;
 export class SupabaseStudentDetailRepository {
   constructor(private readonly clientFactory: ClientFactory = createCurrentUserSupabaseClient) {}
 
-  async get(actor: AuthorizationContext, studentId: string, filters: AssessmentFilters) {
+  async get(
+    actor: AuthorizationContext,
+    studentId: string,
+    filters: AssessmentFilters,
+    options: StudentDetailReadOptions = {},
+  ) {
     const client = await this.clientFactory();
     const organizationId = actor.organizationId;
+    const includeAssessmentOptions = options.includeAssessmentOptions ?? true;
     const queries = [
       client
         .from("students")
@@ -44,7 +53,9 @@ export class SupabaseStudentDetailRepository {
         .eq("student_id", studentId),
       client
         .from("assessments")
-        .select("id, organization_id, term_id, subject, title, assessment_date, maximum_score")
+        .select(
+          "id, organization_id, term_id, subject, title, assessment_date, maximum_score, assessment_kind, curriculum_item_id",
+        )
         .eq("organization_id", organizationId),
       client
         .from("assessment_results")
@@ -54,9 +65,19 @@ export class SupabaseStudentDetailRepository {
         .eq("organization_id", organizationId)
         .eq("student_id", studentId),
     ];
-    const results = await Promise.all(queries);
+    // The picker is only needed on the assessment tab. Start its lookup alongside
+    // the common profile queries rather than adding a serial database round trip.
+    const planQuery = includeAssessmentOptions
+      ? client
+          .from("study_plans")
+          .select("id, status, deleted_at")
+          .eq("organization_id", organizationId)
+          .eq("student_id", studentId)
+      : Promise.resolve({ data: [], error: null });
+    const [results, planResult] = await Promise.all([Promise.all(queries), planQuery]);
     const error = results.find((result) => result.error)?.error;
     if (error) throw mapRepositoryError(error);
+    if (planResult.error) throw mapRepositoryError(planResult.error);
     const tables = [
       "students",
       "student_profiles",
@@ -70,6 +91,7 @@ export class SupabaseStudentDetailRepository {
       tables.map((table, index) => [table, (results[index].data ?? []) as Row[]]),
     );
     const source: StudentDetailSource = {
+      boundAssessmentIds: [],
       students: rows.students.map((row) => ({
         id: String(row.id),
         organizationId: String(row.organization_id),
@@ -149,6 +171,35 @@ export class SupabaseStudentDetailRepository {
       student.phone =
         source.profiles.find((profile) => profile.studentId === student.id)?.phone ?? "";
     });
+    const activePlanIds = new Set(
+      ((planResult.data ?? []) as Row[])
+        .filter((plan) => plan.status === "active" && !plan.deleted_at)
+        .map((plan) => String(plan.id)),
+    );
+    if (activePlanIds.size) {
+      const itemResult = await client
+        .from("student_learning_items")
+        .select("study_plan_id, source_item_id, item_type, status")
+        .eq("organization_id", organizationId)
+        .in("study_plan_id", [...activePlanIds]);
+      if (itemResult.error) throw mapRepositoryError(itemResult.error);
+      const boundItemIds = new Set(
+        ((itemResult.data ?? []) as Row[])
+          .filter(
+            (item) =>
+              item.item_type === "assessment" &&
+              !["removed", "skipped"].includes(String(item.status)),
+          )
+          .map((item) => String(item.source_item_id)),
+      );
+      source.boundAssessmentIds = rows.assessments
+        .filter(
+          (assessment) =>
+            assessment.assessment_kind === "curriculum" &&
+            boundItemIds.has(String(assessment.curriculum_item_id)),
+        )
+        .map((assessment) => String(assessment.id));
+    }
     return buildStudentDetail(actor, studentId, filters, source);
   }
 
@@ -190,6 +241,35 @@ export class SupabaseStudentDetailRepository {
       target_organization_id: actor.organizationId,
       target_student_id: input.studentId,
       target_assessment_id: input.assessmentId,
+      result_score: input.score,
+      result_comment: input.comment,
+    });
+    if (error) throw mapRepositoryError(error);
+    return data;
+  }
+
+  async recordExtraResult(
+    actor: AuthorizationContext,
+    input: {
+      studentId: string;
+      termId: string;
+      subject: string;
+      title: string;
+      date: string;
+      maximumScore: number;
+      score: number;
+      comment: string;
+    },
+  ) {
+    const client = await this.clientFactory();
+    const { data, error } = await client.rpc("record_extra_assessment_result", {
+      target_organization_id: actor.organizationId,
+      target_student_id: input.studentId,
+      target_term_id: input.termId,
+      target_subject: input.subject,
+      assessment_title: input.title,
+      assessment_date: input.date,
+      assessment_maximum_score: input.maximumScore,
       result_score: input.score,
       result_comment: input.comment,
     });

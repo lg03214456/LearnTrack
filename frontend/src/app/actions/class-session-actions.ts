@@ -14,7 +14,7 @@ import {
   completeClassSession,
   correctDailyProgress,
   saveDailyProgress,
-} from "@/server/services/class-session-service";
+} from "@/server/services/class-session-persistence-service";
 
 const field = (data: FormData, key: string) => String(data.get(key) ?? "");
 const invalid = (message: string): DailyProgressCommandResult => ({

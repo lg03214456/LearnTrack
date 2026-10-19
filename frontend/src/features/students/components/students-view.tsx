@@ -7,16 +7,19 @@ import { StudentFilters } from "./student-filters";
 import { StudentSummary } from "./student-summary";
 import { StudentTable } from "./student-table";
 import { StudentRosterEditor } from "./student-roster-editor";
+import { StudentSetup } from "./student-setup";
 export function StudentsView({
   result,
   query,
   canManageStudents = false,
   canManageClasses = false,
+  contextKey,
 }: {
   result: StudentListResult;
   query: ListStudentsQuery;
   canManageStudents?: boolean;
   canManageClasses?: boolean;
+  contextKey?: string;
 }) {
   if (result.state === "unavailable-class")
     return (
@@ -37,10 +40,14 @@ export function StudentsView({
     <>
       {canManageStudents && (
         <div className="mb-4 flex justify-end">
-          <StudentRosterEditor
-            classOptions={result.classOptions}
-            canManageClasses={canManageClasses}
-          />
+          {contextKey ? (
+            <StudentSetup key={contextKey} contextKey={contextKey} />
+          ) : (
+            <StudentRosterEditor
+              classOptions={result.classOptions}
+              canManageClasses={canManageClasses}
+            />
+          )}
         </div>
       )}
       <StudentSummary result={result} />

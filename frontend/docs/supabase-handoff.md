@@ -41,6 +41,7 @@ Migration 執行順序：
 
 - Membership、role、student、class 與 relationship 表依實際 RLS lookup 建立 organization、status、profile、student、class 複合索引。
 - `students (organization_id, student_number)` unique
+- `202610050004_backfill_missing_student_numbers.sql` 會依機構與建立順序，替既有空白學號補上不重複的 `STU-0001` 格式編號；新學生仍由 `students_assign_student_number` Trigger 自動編號。
 - `students` 增加 `status`（`active`／`leave`／`archived`）、nullable `archived_at`、`archived_by`、`archive_reason`。一般名單預設排除 `archived`，但學號唯一性仍包含已封存資料。
 - 封存學生必須在 transaction 內寫入封存稽核欄位並結束所有 active Enrollment；不刪除成績、出勤、修課計畫或個人 Profile。恢復時先設為 `leave`，不自動恢復 Enrollment。
 - `enrollments (organization_id, student_id, class_id)` unique
@@ -75,7 +76,9 @@ Migration 執行順序：
 
 # Curriculum handoff
 
-新增資料表建議：`curriculum_templates`、`template_versions`、`template_items`、`study_plans`、`student_learning_items`。所有表必須含 `organization_id`；RLS 以 membership、role permission 與 class enrollment 限制讀寫。發布版本不可更新內容，啟用修課計畫時需在 transaction 內建立學生項目快照。前端不直接查表，維持 repository/service 邊界。
+`202610070001_curriculum_study_plan_lifecycle.sql` 建立 `curriculum_templates`、`curriculum_versions`、`curriculum_items`、`study_plans`、`student_learning_items` 與 `assessment_series`。所有表皆含 `organization_id` 並啟用 RLS；發布版本不可修改，啟用或更換修課計畫由 `replace_student_study_plan` 在同一 transaction 建立學生項目快照。
+
+修課計畫更換採軟狀態轉換：舊計畫改為 `replaced`，已完成且具有相同 `lineage_id` 的項目帶入新計畫，未完成舊項目改為 `removed` 並保存原因與時間。資料庫不得硬刪除已參與課堂或成績歷史的計畫與項目；一般刪除需求使用 `deleted_at`、執行者與原因。
 
 ### Template item mutation transaction
 
@@ -90,10 +93,26 @@ Migration 執行順序：
 - `student_profiles`: `student_id` unique FK、`organization_id` FK、`school`、`grade`、`phone`、`revision integer not null default 1`。
 - `guardians`: `organization_id`、`student_id` FK、姓名、關係與電話；索引 `(organization_id, student_id)`。
 - `assessments`: `term_id`、`subject_id`、名稱、日期、`maximum_score > 0`；索引 `(organization_id, term_id, subject_id, assessment_date desc)`。
-- `assessment_results`: assessment/student FK、score、comment、revision、updated_at/by；unique `(organization_id, assessment_id, student_id)`，trigger 驗證 `0 <= score <= maximum_score`，索引 `(organization_id, student_id, updated_at desc)`。
+- `assessment_results`: assessment/student FK、score、comment、revision、updated_at/by；可選擇關聯 `study_plan_id`、`learning_item_id` 與 `class_session_id`。unique `(organization_id, assessment_id, student_id)`，trigger 驗證 `0 <= score <= maximum_score`。
+- 教材考卷以 `assessments.assessment_kind = 'curriculum'` 並關聯 `curriculum_item_id`；額外考卷使用 `assessment_kind = 'extra'`。`record_extra_assessment_result` 會在同一 transaction 建立額外考卷與該生分數。
 - 建議另建 append-only `assessment_result_audits` 保存更正前後值、actor、時間與原因；mock 目前只保存最新值與最後更新者。
 
 ## 班級每日課堂與學生進度
+
+### 2026-10-10 今日課堂接線
+
+先執行 `supabase/migrations/202610100001_class_session_functions.sql`，依賴已存在的 `202610030001_class_session_progress.sql`、科目目錄與 `202610070001_curriculum_study_plan_lifecycle.sql`。不重建或清空資料表。保持 `LEARNTRACK_DOMAIN_DATA_PROVIDER=supabase`，不需新增環境變數。
+
+- `open_class_daily_workspace` 驗證 `progress.read` 與班級 scope；僅具 `progress.manage` 者首次開啟時建立課堂與 active enrollment 快照。同日重開不改既有名單；唯讀使用者不建立資料。
+- `mutate_class_daily_progress` 支援 save、append、complete、correct；使用當前 JWT 的 profile、organization、class/student scope、active 未刪除計畫與 item revision 驗證。
+- RPC 在同一 transaction 更新 `student_session_progress`、`student_learning_items` 與 `class_sessions.revision`；更正以 successor 保留原紀錄，拒絕覆蓋新的學習狀態。
+- 新增 `learning_item_revision_after` 保存寫入後版本。舊紀錄沒有此欄位值時，安全拒絕更正，不能猜測舊版本或補填後硬改。
+- 收回 authenticated 對課堂、成員、進度的直接 REST 寫入授權；只經檢查完整的 RPC 寫入。進度及出勤歷史加上拒絕 UPDATE／DELETE trigger。平台與 anonymous 不允許 tenant RPC。
+- `/attendance` 編輯器仍是待辦；教材與計畫編輯器已另行接入下述 curriculum RPC。此課堂不會讀 Mock plan。驗收前需確認資料庫已有該生 active `study_plans` 與 `student_learning_items`。
+
+SQL 靜態測試與模擬 client 測試不是資料庫 integration。套用後由 Organization Owner 驗證：同日名單不重建、批次儲存後重新整理仍存在、學生個人頁進度同步、完成後只能補登或更正、舊 revision 被拒絕。另一機構與 Platform Owner 的拒絕路徑需在隔離測試資料庫使用真實 JWT 驗證。
+
+本次程式驗證：`pnpm test` 312 tests / 77 files 通過；`pnpm lint`、`pnpm typecheck`、`pnpm build` 通過。今日課堂 focused suite 38 tests 通過；`pnpm format:check` 因 49 個既有非本次接線檔案失敗，本次接線 TypeScript 檔案已單獨格式化。未執行真實資料庫 SQL、RLS、跨裝置持久化或 Vercel 驗收；不要把單元測試當成這些環境已通過。
 
 班級不擁有教材版本；`student_study_plans` 才是學生版本來源。建議新增：
 
@@ -119,6 +138,19 @@ RLS 先驗證 active organization membership；organization-wide 角色依 permi
 
 ## Class management and recurring schedules handoff
 
+### 2026-10-10 教材與學生修課計畫接線
+
+先在 SQL Editor 執行 `supabase/migrations/202610100002_curriculum_functions.sql`，依賴已有的 `subjects`、學生／Enrollment 與 `202610070001_curriculum_study_plan_lifecycle.sql`。只追加／替換函式與縮減直接寫入 grant，不清空表或示範 seed，不需要更改環境變數；保持 `LEARNTRACK_DOMAIN_DATA_PROVIDER=supabase`。這份 SQL 可重跑。
+
+- `read_curriculum_workspace`：教材查詢要求 `curriculum.read`；學生計畫查詢要求該生 `study_plans.read` scope。只回傳該組織教材或所選學生的非軟刪除計畫；管理者可選用同組織未封存的已發布版本。
+- `mutate_curriculum_workspace`：管理權限與持久化 parent/student scope、revision、草稿狀態、完整唯一排序清單皆在資料庫再驗證。authenticated 不可直接 INSERT/UPDATE/DELETE 教材與學習項目表。
+- `replace_student_study_plan` 修正舊 active slot 與新計畫的寫入順序，鎖學生以序列化首次啟用；同 lineage 的完成項目保留，其餘舊項目僅改 removed。公開舊函式仍保留同一安全 scope 檢查。
+- 既有年級、出版社、學期先保留固定目錄；科目讀 `subjects.code/name`。教材 assessment 項目不自動成為 `assessments` 主檔。
+
+套用後驗收：重新載入教材庫，確認 SQL 新增教材；選已發布版本查看內容；學生個人頁「修課計畫」選學期／教材並建立；重新整理確認 items 持久化；更新一項完成，再複製草稿、發布並更換，確認新舊計畫的完成保留／未完成移除。跨機構、老師、Platform Owner 與匿名真實 JWT matrix 必須在隔離測試資料庫驗收，不用 service-role 代替。
+
+本次品質門檻：351 tests / 81 files、lint、typecheck、build 通過；全專案 format check 仍有 49 個既有非本次格式問題，本次相關檔案單獨格式化。`test/curriculum-postgres-smoke.mjs` 可帶入暫存安裝的 `@electric-sql/pglite/dist/index.js` 絕對路徑，執行隔離 PostgreSQL smoke test；未新增專案 dependency。它驗證 SQL 的交易／constraint，不代表 Supabase 真實 membership/RLS 或部署驗收完成。
+
 建議資料表：
 
 - `classes`: `organization_id`、`name`、`code`、`class_type`、nullable `capacity`、`lifecycle_status`、`progress`、`revision`、`completed_at`、`archived_at`。
@@ -137,6 +169,12 @@ RLS 先驗證 active organization membership；organization-wide 角色依 permi
 
 RLS 必須先驗證 active organization membership。owner/admin 且具 `classes.manage` 可建立、修改、結業與封存；assigned teacher 只能讀取並修改 active 指派班級的允許欄位、排課及 enrollment，不能更換教師或改生命週期；其他角色唯讀或拒絕。所有 relationship policy 需透過 parent class 再驗證 organization，不能信任前端提交的 organization、role、teacher 或 revision。
 
+## 教材基本資料編輯（2026-10-11）
+
+先套用 `supabase/migrations/202610100002_curriculum_functions.sql`，再套用 `202610110001_curriculum_template_editing.sql`。後者僅新增 template revision 與讀寫 RPC，不清除資料、不改學生計畫。`read_curriculum_template_editor` 與 `update_curriculum_template` 都驗證 `curriculum.manage` 與 organization；匿名無執行權、authenticated 不可直接更新表。名稱必填且最多 200 字、同機構未封存名稱不重複、年級／出版社合法且科目屬本機構。發布／曾有計畫使用後鎖年級／科目，其他 metadata 可更新。revision 與 template row lock 防止過期覆寫及與發布競爭。
+
+不需更改環境變數。驗收：三個點→編輯基本資料→儲存→重新整理確認；已發布教材→編輯內容→確認複製→草稿項目編輯→確認原版與學生進度不變。隔離 PostgreSQL smoke 已包含 metadata revision、分類鎖、重複 rollback、匿名／tenant 拒絕與學生快照不變；membership helpers 是 fixture，真實 Supabase JWT／RLS 與部署驗收仍待執行。
+
 ## Platform Owner 與多機構檢視
 
 依序套用 `202609160001_identity_membership_and_audit.sql`、`202609160002_row_level_security.sql`、`202609290001_platform_owner_read_access.sql`。Platform Owner 使用獨立的 `platform_operators`、`platform_permissions` 與 `platform_role_permissions`，不得同時持有 active organization membership；租戶 Owner 不會因此取得平台權限。
@@ -146,3 +184,18 @@ RLS 必須先驗證 active organization membership。owner/admin 且具 `classes
 平台只能列出 active organization，選定明確 organization ID 後唯讀檢視。RLS 只把 `platform.tenant_data.read` 加入 tenant SELECT policy；既有 INSERT／UPDATE policy 不含平台分支。每次進入或拒絕檢視均寫入 append-only `platform_audit_logs`。Browser 顯示的 organization 名稱一律重新由資料庫 ID 查得，不能信任 URL label 或 local storage。
 
 回滾時先停用 `platform_operators.status`，確認無平台 session，再移除新增的 platform SELECT policies／函式／四張 platform tables；不可刪除 tenant schema 或 tenant audit。驗證至少準備 A、B 兩個機構：租戶 A 不得讀 B；Platform Owner 可讀 A、B 但所有 mutation 均拒絕；anonymous 全部拒絕；稽核需記錄每次目標切換。
+# 學生個別段考範圍補充
+
+## 今日課堂點名與原始順序歷史（2026-10-19）
+
+在 `202610030001_class_session_progress.sql`、curriculum lifecycle 和 `202610100001_class_session_functions.sql` 已套用後，執行 `supabase/migrations/202610190001_class_attendance_and_history.sql`。這是加欄位／RPC，不重建表、不刪舊資料，不需更改環境變數。
+
+- `attendance_records.arrived_at`：僅 late 可選填，課堂日期＋輸入 HH:mm，Asia/Taipei 換算 timestamptz。`recorded_at` 仍由 server clock 產生，不互相代用。
+- `open_class_daily_workspace_v2`：沿用原 RPC 的 scope／名單快照，補歷史 plan/version/item position，依 attendance.read 讀到課／登記時間。
+- `save_class_daily_attendance`：caller JWT／current_profile_id，檢查 attendance.read/manage、機構／班級／學生／member 關係、lesson revision、previousRecordId 與原因，整批交易並 append successors；不更動學生進度。
+- 保留既有 RLS SELECT 與 append-only triggers；撤銷 authenticated 對 attendance_records 的直接 INSERT/UPDATE/DELETE，避免繞過 revision／原因／關係檢查。不要重新授權直表 INSERT 來修錯。
+- 若既有一個 member 有多筆互不相接的最新紀錄，儲存回 CONFLICT，需人工確認更正鏈，不會自動刪除或合併。回滾應先停止新版寫入，使用上一版應用／原讀取 RPC；保留新增欄位與歷史，不刪已存資料或放寬 grants。
+
+缺少 v2 RPC 時應用僅退回原真實 progress read，明確標記點名未啟用；其他錯誤不 fallback、不改成 Mock。隔離 PostgreSQL 測試可用 `node test/class-attendance-postgres-smoke.mjs <PGlite module path>`，但 permission helpers 為 fixture，真實 Supabase JWT／RLS、多人競態與 Preview 寫入仍需獨立驗收。測試與逐步操作見 `docs/class-attendance-verification.md`。
+
+新增 migration `supabase/migrations/202610160001_student_exam_ranges.sql`，前置為既有 curriculum lifecycle 表與 `private.can_access_student`。新增 `student_exam_ranges`／`student_exam_range_items`、composite FK、RLS 與 `read_student_exam_ranges`／`save_student_exam_range`。Authenticated 只可依 scope SELECT 表，寫入僅走 guarded RPC；public／anon 無 RPC 權限。不改進度表、不新增環境變數、不自動套用共享 DB。先執行 `supabase/checks/student_exam_ranges_preflight.sql`，完整操作／驗收與 rollback 見 `docs/student-exam-ranges-verification.md`。

@@ -18,6 +18,14 @@ Mock 身分切換流程為 `Shell selector → selectPersona Server Action → H
 
 ## 班級今日課堂進度
 
+課堂日期由 `ClassSessionDateNavigation` 選擇後直接以 `router.push` 更新 URL，不需提交切換按鈕。Transition 期間顯示「正在載入課堂…」並停用舊課堂表單；新日期的 workspace 使用 class/date key 重新初始化，避免暫存進度跨日。日期導航移除前次 notice/tone，但不改資料庫或授權規則。
+
+Supabase provider：讀取經 `class-session-supabase.ts → open_class_daily_workspace`；四個寫入 Action 經 `class-session-persistence-service → mutate_class_daily_progress`。RPC 使用使用者 JWT 與 membership helper 驗證範圍，不使用 secret key。資料庫交易一次更新課堂版本、進度歷史及目前學習項目；失敗不 fallback 到 Mock。兩個 RPC 需先套用 `202610100001_class_session_functions.sql`。
+
+此接線不包含 `/attendance` 編輯器。今日課堂只使用資料庫 active plan；記憶體計畫不會被當成已持久化資料。
+
+教材／修課計畫現由 `curriculum-persistence-service` 依 domain provider 分流。Supabase 模式用 `mutate_curriculum_workspace` 原子建立／發布／複製／封存教材、增刪與排序草稿項目、更換學生計畫、更新 active 學習項目；查詢用 `read_curriculum_workspace`。成功才刷新資料；失敗顯示安全訊息，missing migration/network 不 fallback。建立教材成功導向新草稿；發布與更換計畫保留結果通知。複製／發布附 version revision；個人進度更新附 item revision，舊計畫與 removed 項目唯讀。上述接線需 `202610100002_curriculum_functions.sql`。
+
 ```text
 /classes/[classId]?date=YYYY-MM-DD
   → ClassSessionRepository 建立或讀取 ClassSession 與成員快照
@@ -236,13 +244,23 @@ sequenceDiagram
 | 產生應到名單 | `/attendance?date=<local-date>` → `expectedAttendance` | active lifecycle、weekday schedule、active enrollment、同班去重 |
 # 教材與修課計畫操作
 
-`教材範本頁 → Server Action → curriculum-service → curriculumStore（未來 Supabase）`
+學生段考範圍：`StudentExamRanges → saveExamRangeAction → saveExamRange → examRangeRepository.save`；讀取由學生 page 經 `examRangeRepository.read`，僅在 plans tab。依 `study_plans.read/manage` 與學生 scope 控制，Supabase guarded RPC 驗證租戶／學生／計畫／項目、鎖定及 revision。儲存只變更段考與選取關聯，不改學習狀態或考卷分數；required Audit 完成才回傳成功並刷新學生頁。
 
-`學生個人頁 → 建立修課計畫 → 複製已發布版本項目快照 → 個人進度更新`
+`教材範本頁 → Server Action → curriculum-service → curriculumStore（Supabase schema/RPC 已準備，CRUD adapter 尚待整體切換）`
+
+`學生個人頁 → 建立／更換修課計畫 → 複製已發布版本項目快照 → 個人進度更新`
+
+更換同學期同科目的修課計畫時，舊計畫改為 `replaced`，未完成項目改為 `removed`；相同教材 lineage 的完成項目會延續到新計畫。考試頁可選既有考卷登錄分數，也可使用「新增額外考卷」一次建立考卷與該生結果。
+
+學生個人頁的資料編輯、登錄教材考卷、新增額外考卷與逐筆成績更正採用響應式原生 modal dialog；Escape／關閉後返回操作按鈕。沿用既有 Server Actions 與授權，不新增資料庫寫入路徑。教材選單仍以 repository 提供的已綁定、尚未登錄考卷為準；沒有選項時提供提示而不顯示可送出的表單。
+
+成績頁採卡片優先：上方集中登錄教材考卷與新增額外考卷，各結果卡片直接提供編輯成績。路由傳入 `assessment_history.manage` 判定，不再另外重複呈現成績更正清單；GET 篩選、班級情境與匯出資料範圍保持不變。
 
 發布版本後不可直接修改；既有學生計畫保留自己的學習項目快照，不受後續範本改版影響。
 
 ## 教材項目新增、刪除與排序
+
+整份教材「刪除教材」在卡片三點選單及版本頁開啟確認 modal；確認後呼叫 `archiveTemplateAction → curriculum-persistence-service.archiveTemplate → mutate_curriculum_workspace(archive)`。沿用機構 scope、`curriculum.manage` 與 Audit；只封存 template，不硬刪除 versions／items／plans／learning items。一般清單排除封存教材，已封存篩選可查閱；學生既有計畫繼續顯示，禁止新指派。
 
 ```mermaid
 flowchart LR
@@ -281,6 +299,8 @@ flowchart LR
 | 登錄／更正 | `assessment_history.manage` | result actions | 所有權、分數、duplicate、revision、actor |
 # 學生名單管理
 
+教材卡片「編輯基本資料」：`readTemplateEditorAction → curriculumRepository.templateEditor` 取得機構 scope、revision、分類與鎖定狀態；`updateTemplateStateAction → updateTemplate → curriculumRepository.updateTemplate` 寫入並稽核 `curriculum.changed`，成功才刷新列表／版本／學生頁。錯誤留在對話框，不假成功。教材內容：「編輯內容」直接開最新草稿；沒有草稿則確認 `copyVersionAction`。草稿每列「編輯」透過 `updateTemplateItemStateAction → updateTemplateItem → mutate_curriculum_workspace(updateItem)` 儲存，保留既有 lineage 與学生快照。
+
 ```text
 /students 新增學生／單筆設定
   → saveStudentRosterStateAction
@@ -311,3 +331,18 @@ flowchart LR
 | 查閱操作紀錄 | `/settings/audit` | Server page query | organization-scoped Audit repository | read only |
 
 重要異動一律先確認 Audit 可寫；如果 Audit persistence 不可用，Action 不執行 mutation 或回報成功。Audit metadata 僅允許最小欄位，禁止 password、hash、token、完整 reset link、Email／電話／姓名等不必要個資。
+# 學生連續設定入口
+
+`StudentSetup` → `readStudentSetupAction`／`saveStudentSetupBasicAction` → 原 roster action/service；教材步驟 → `saveStudentSetupPlanAction` → 共用 Audit + `createAndActivatePlan`；段考步驟 → 共用 `ExamRangeForm` → 原 `saveExamRangeAction`。學習選項經 `readStudentLearningSetupAction` 重新查 scoped repositories。每一步獨立保存；完成摘要不是跨步驟 transaction。詳見 `frontend/docs/student-setup-verification.md`。
+
+# 課堂學生進度勾選
+
+後續簡化：課堂畫面已移除進階／統一更新入口，使用姓名勾選確認即可直接儲存；舊 batch action 保留相容性而非第二次儲存要求。
+
+`ClassDailyWorkspaceView` → 點學生姓名 → `StudentProgressChecklistDialog` → `buildCheckedProgressEntries` → 原 `saveDailyProgressAction`／completed session 的 `appendCompletedProgressAction`。僅提交當前學生新勾選的 completed entries 與原 revisions，沿用 Audit／service／repository；確認即儲存並 refresh。未勾選不更新，已完成 readonly；歷史更正仍保留。這個 checklist 本身無新增 SQL 或環境變數，驗證見 `frontend/docs/class-progress-checklist-verification.md`。
+
+## 課堂點名與原始順序歷史
+
+`ClassAttendanceDialog` → `saveClassAttendanceAction` → `saveClassAttendance` → provider-selected repository → `save_class_daily_attendance`。Audit preflight／append 沿用 attendance.changed，只記 recordCount，不放時間、原因或姓名。儲存成功刷新課堂、出缺席及相關學生；Audit／網路結果不確定時不回報成功，要求重新載入而非自動重試。更正以 successor append 保留原值；session revision 防止其他人先更新。只影響 attendance_records／class_sessions.revision，不更動學習進度。
+
+`open_class_daily_workspace_v2` 追加到課時間與真實歷史 plan/version/item position，`groupSessionHistory` 依學生和版本分組、原項目順序顯示，保留更正控制與時間。須手動套用 `202610190001_class_attendance_and_history.sql`；環境變數不變，調課仍待規格。

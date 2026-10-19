@@ -47,6 +47,9 @@ export interface AssessmentFilters {
   page: number;
   pageSize: number;
 }
+export interface StudentDetailReadOptions {
+  includeAssessmentOptions?: boolean;
+}
 export interface AssessmentSummary {
   latestPercentage: number | null;
   averagePercentage: number | null;
@@ -101,5 +104,15 @@ export interface CorrectAssessmentResultCommand {
   score: number;
   comment: string;
   revision: number;
+}
+export interface RecordExtraAssessmentResultCommand {
+  studentId: string;
+  termId: string;
+  subject: string;
+  title: string;
+  date: string;
+  maximumScore: number;
+  score: number;
+  comment: string;
 }
 export type StudentDetailCommandResult = CommandResult;

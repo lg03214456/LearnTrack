@@ -37,3 +37,18 @@
 - [x] 6.2 Extend the Supabase handoff with table definitions, foreign keys, indexes, correction audit strategy, transaction boundary, and organization/class/student RLS rules; verify it explicitly states that classes do not own curriculum versions.
 - [x] 6.3 Run Prettier, ESLint, TypeScript, focused tests, the complete test suite, and the production build; verify every command succeeds without unrelated changes.
 - [x] 6.4 Start the local app and browser-verify the class-card entry, mixed-version roster, optional notes, no-update defaults, multi-entry behavior, save result, history, and responsive layout.
+## 7. Approved student checklist refinement (2026-10-19)
+
+- [x] 7.1 Add the student-name-triggered, grouped checklist dialog with previous completion readonly, optional note, unchanged-item exclusion and direct audited confirmation; verify multi-plan payloads, original revisions, cancellation, empty/readonly states and completed-session append reason.
+- [x] 7.2 Keep the original status/batch editor and correction history as secondary operations; verify session/date/membership remount, pending dismissal protection, duplicate prevention, rejected-save draft retention and uncertain-save reload handling.
+- [x] 7.3 Run focused/full tests, format check, lint, typecheck and build; document baseline failures, read-only browser/mobile proof, unchanged schema/env and pending real database write acceptance.
+
+Checklist local verification: `frontend/docs/class-progress-checklist-verification.md` (456 tests, lint/typecheck/build passed; 49 unrelated baseline formatting warnings). No shared-database writes or real JWT/RLS/deployment acceptance are claimed.
+
+## 8. Approved attendance and student-grouped history (2026-10-19)
+
+- [x] 8.1 Implement four-state attendance dialog, optional actual arrival time, audited scoped atomic persistence, revision checks and append-only corrections; supply migration without applying it to shared data. Unselected students remain unchanged; rescheduling is excluded.
+- [x] 8.2 Group session progress history by student and original plan/version, order by original item position rather than timestamp, display record times and preserve correction controls/history.
+- [x] 8.3 Add focused security, data and UI regression tests; run full quality gates and document SQL handoff and unverified live database acceptance.
+
+Attendance local verification: `frontend/docs/class-attendance-verification.md` (503 tests; lint/typecheck/build and isolated PostgreSQL smoke passed; 48 unrelated format warnings remain). Shared SQL, actual attendance writes, mobile viewport, real JWT/RLS and deployment acceptance remain explicitly unverified.

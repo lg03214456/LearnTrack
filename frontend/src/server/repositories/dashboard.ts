@@ -56,9 +56,11 @@ class MockDashboardRepository implements DashboardRepository {
   async analytics(organizationId: string, classIds?: string[]) {
     const classes = await this.classes(organizationId, classIds);
     return {
+      hasData: true,
       averageScore: 78.5,
       completion: 82,
       participation: 92,
+      excellentStudents: 45,
       atRisk: 2,
       trend: [
         { month: "3月", score: 68 },
@@ -96,6 +98,9 @@ export const dashboardRepository: DashboardRepository = {
   classes: (organizationId, classIds) => mockDashboardRepository.classes(organizationId, classIds),
   attendance: () => mockDashboardRepository.attendance(),
   analytics: (organizationId, classIds) =>
-    mockDashboardRepository.analytics(organizationId, classIds),
+    selectDomainRepository({
+      mock: mockDashboardRepository,
+      supabase: supabaseDashboardRepository,
+    }).analytics(organizationId, classIds),
 };
 export { ORG };

@@ -10,7 +10,7 @@ export interface ClassSessionPlanOption {
   items: {
     id: string;
     title: string;
-    status: LearningStatus;
+    status: Exclude<LearningStatus, "skipped" | "removed">;
     revision: number;
   }[];
 }
@@ -21,6 +21,7 @@ export interface ClassSessionMemberView {
   studentName: string;
   studentNumber: string;
   attendanceStatus: AttendanceStatus | "pending";
+  attendance?: { id: string; arrivedAt?: string; recordedAt: string; revision: number };
   plans: ClassSessionPlanOption[];
   needsPlanSetup: boolean;
   history: ClassSessionProgressView[];
@@ -31,8 +32,13 @@ export interface ClassSessionProgressView {
   studentId: string;
   studentName: string;
   planLabel: string;
+  studyPlanId?: string;
+  versionId?: string;
+  versionLabel?: string;
+  learningItemId?: string;
+  itemPosition?: number;
   learningItemTitle: string;
-  statusAfterSession: Exclude<LearningStatus, "skipped">;
+  statusAfterSession: Exclude<LearningStatus, "skipped" | "removed">;
   note?: string;
   recordedAt: string;
   recordedBy: string;
@@ -56,6 +62,23 @@ export interface ClassDailyWorkspace {
   members: ClassSessionMemberView[];
   history: ClassSessionProgressView[];
   canManage: boolean;
+  attendanceAvailable?: boolean;
+  canManageAttendance?: boolean;
+}
+
+export interface ClassAttendanceEntry {
+  sessionMemberId: string;
+  studentId: string;
+  status: AttendanceStatus;
+  arrivalTime?: string;
+  previousRecordId?: string;
+}
+
+export interface SaveClassAttendanceCommand {
+  sessionId: string;
+  sessionRevision: number;
+  entries: ClassAttendanceEntry[];
+  reason: string;
 }
 
 export interface DailyProgressEntryInput {
@@ -64,7 +87,7 @@ export interface DailyProgressEntryInput {
   studyPlanId: string;
   learningItemId: string;
   learningItemRevision: number;
-  status: Exclude<LearningStatus, "skipped">;
+  status: Exclude<LearningStatus, "skipped" | "removed">;
   note?: string;
 }
 
@@ -81,7 +104,7 @@ export interface AppendCompletedProgressCommand extends SaveDailyProgressCommand
 export interface CorrectDailyProgressCommand {
   progressId: string;
   revision: number;
-  status: Exclude<LearningStatus, "skipped">;
+  status: Exclude<LearningStatus, "skipped" | "removed">;
   note?: string;
   reason: string;
 }

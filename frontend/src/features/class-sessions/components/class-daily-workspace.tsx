@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { BookOpenCheck, CheckCircle2, Plus, Save, Trash2, UserRound } from "lucide-react";
 import {
   appendCompletedProgressAction,
@@ -12,6 +13,10 @@ import type {
   DailyProgressCommandResult,
   DailyProgressEntryInput,
 } from "../class-session.types";
+import { StudentProgressChecklistDialog } from "./student-progress-checklist-dialog";
+import { ClassAttendanceDialog } from "./class-attendance-dialog";
+import { groupSessionHistory } from "../session-history";
+import { classRecordTime } from "../class-attendance";
 
 const statusLabels = {
   pending: "尚未開始",
@@ -44,12 +49,160 @@ function suggestedEntry(member: ClassDailyWorkspace["members"][number]): DraftEn
     studyPlanId: plan.id,
     learningItemId: item.id,
     learningItemRevision: item.revision,
-    status: item.status === "skipped" ? "pending" : item.status,
+    status: item.status,
     note: "",
   };
 }
 
-export function ClassDailyWorkspaceView({ data }: { data: ClassDailyWorkspace }) {
+export function ClassDailyWorkspaceView({
+  data,
+  contextKey = "",
+}: {
+  data: ClassDailyWorkspace;
+  contextKey?: string;
+}) {
+  return (
+    <StudentProgressWorkspace
+      key={`${contextKey}:${data.session.id}:${data.session.sessionDate}:${data.session.revision}`}
+      data={data}
+    />
+  );
+}
+
+function StudentProgressWorkspace({ data }: { data: ClassDailyWorkspace }) {
+  const [studentId, setStudentId] = useState<string | null>(null);
+  const [isAttendanceOpen, setAttendanceOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [isRefreshing, startRefresh] = useTransition();
+  const router = useRouter();
+  const member = data.members.find((item) => item.studentId === studentId);
+  const reload = () => {
+    setStudentId(null);
+    setAttendanceOpen(false);
+    startRefresh(() => router.refresh());
+  };
+  return (
+    <section
+      className="space-y-4"
+      aria-labelledby="student-progress-heading"
+      aria-busy={isRefreshing}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 id="student-progress-heading" className="text-lg font-bold">
+            學生進度
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            點學生姓名查看目前教材，勾選本次完成項目後確認儲存。
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            disabled={isRefreshing}
+            onClick={() => {
+              setStudentId(null);
+              setAttendanceOpen(true);
+            }}
+            className="rounded-lg border border-teal-200 bg-white px-4 py-2 text-sm font-bold text-teal-800 disabled:opacity-50"
+          >
+            課堂點名
+          </button>
+          <span className="text-sm text-slate-500">
+            {data.members.length} 位學生 ·{" "}
+            {data.session.status === "completed" ? "已完成課堂" : "課堂進行中"}
+          </span>
+        </div>
+      </div>
+      <div className="card divide-y overflow-hidden">
+        {data.members.map((student) => {
+          const items = student.plans.flatMap((plan) => plan.items);
+          const done = items.filter((item) => item.status === "completed").length;
+          return (
+            <div key={student.id} className="flex flex-wrap items-center justify-between gap-4 p-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-teal-50 text-teal-800">
+                  <UserRound size={17} />
+                </span>
+                <div className="min-w-0">
+                  <button
+                    type="button"
+                    disabled={isRefreshing}
+                    onClick={() => {
+                      setAttendanceOpen(false);
+                      setStudentId(student.studentId);
+                    }}
+                    className="text-left font-bold break-words text-teal-800 underline decoration-teal-200 underline-offset-4 hover:decoration-teal-800 disabled:opacity-50"
+                  >
+                    {student.studentName}
+                  </button>
+                  <p className="text-xs text-slate-500">{student.studentNumber}</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-3 text-sm">
+                <span className="text-slate-500">
+                  {items.length
+                    ? `已完成 ${done} / ${items.length} 項 · ${student.plans.length} 份教材`
+                    : "尚未設定可用教材"}
+                </span>
+                <span className="pill bg-slate-100 text-slate-600">
+                  {attendanceLabels[student.attendanceStatus]}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+        {!data.members.length && <p className="p-6 text-sm text-slate-500">這堂課目前沒有學生。</p>}
+      </div>
+      {message && (
+        <p role="status" className="rounded-lg bg-teal-50 p-3 text-sm text-teal-900">
+          {message}
+        </p>
+      )}
+      {isRefreshing && (
+        <p role="status" className="text-sm text-slate-500">
+          重新載入課堂進度中…
+        </p>
+      )}
+      {member && (
+        <StudentProgressChecklistDialog
+          key={member.studentId}
+          data={data}
+          member={member}
+          onClose={() => setStudentId(null)}
+          onReload={reload}
+          onSaved={(notice) => {
+            setMessage(notice);
+            reload();
+          }}
+        />
+      )}
+      {isAttendanceOpen && (
+        <ClassAttendanceDialog
+          data={data}
+          onClose={() => setAttendanceOpen(false)}
+          onReload={reload}
+          onSaved={(notice) => {
+            setMessage(notice);
+            reload();
+          }}
+        />
+      )}
+    </section>
+  );
+}
+
+export function BatchDailyProgressEditor({
+  data,
+  onDraftChange,
+  onSaved,
+  onPendingChange,
+}: {
+  data: ClassDailyWorkspace;
+  onDraftChange?: () => void;
+  onSaved?: () => void;
+  onPendingChange?: (pending: boolean) => void;
+}) {
   const [entries, setEntries] = useState<DraftEntry[]>(() =>
     data.session.status === "draft"
       ? data.members.map(suggestedEntry).filter((entry): entry is DraftEntry => Boolean(entry))
@@ -59,10 +212,16 @@ export function ClassDailyWorkspaceView({ data }: { data: ClassDailyWorkspace })
   const progressAction = isCompleted ? appendCompletedProgressAction : saveDailyProgressAction;
   const submitProgressAction = async (previous: DailyProgressCommandResult, formData: FormData) => {
     const outcome = await progressAction(previous, formData);
-    if (outcome.ok) setEntries([]);
+    if (outcome.ok) {
+      setEntries([]);
+      onSaved?.();
+    }
     return outcome;
   };
   const [state, formAction, isPending] = useActionState(submitProgressAction, initialResult);
+  useEffect(() => {
+    onPendingChange?.(isPending);
+  }, [isPending, onPendingChange]);
   const affectedStudents = useMemo(
     () => new Set(entries.map((entry) => entry.studentId)).size,
     [entries],
@@ -85,14 +244,22 @@ export function ClassDailyWorkspaceView({ data }: { data: ClassDailyWorkspace })
         studyPlanId: plan.id,
         learningItemId: item.id,
         learningItemRevision: item.revision,
-        status: item.status === "skipped" ? "pending" : item.status,
+        status: item.status,
         note: "",
       },
     ]);
   };
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form
+      action={formAction}
+      className="space-y-5"
+      onChangeCapture={onDraftChange}
+      onClickCapture={(event) => {
+        if (event.target instanceof Element && event.target.closest("button")?.type === "button")
+          onDraftChange?.();
+      }}
+    >
       <input type="hidden" name="sessionId" value={data.session.id} />
       <input type="hidden" name="sessionRevision" value={data.session.revision} />
       <input type="hidden" name="classId" value={data.session.classId} />
@@ -187,8 +354,7 @@ export function ClassDailyWorkspaceView({ data }: { data: ClassDailyWorkspace })
                                   studyPlanId: nextPlan.id,
                                   learningItemId: nextItem.id,
                                   learningItemRevision: nextItem.revision,
-                                  status:
-                                    nextItem.status === "skipped" ? "pending" : nextItem.status,
+                                  status: nextItem.status,
                                 });
                               }}
                             >
@@ -212,8 +378,7 @@ export function ClassDailyWorkspaceView({ data }: { data: ClassDailyWorkspace })
                                 updateEntry(entry.clientId, {
                                   learningItemId: nextItem.id,
                                   learningItemRevision: nextItem.revision,
-                                  status:
-                                    nextItem.status === "skipped" ? "pending" : nextItem.status,
+                                  status: nextItem.status,
                                 });
                               }}
                             >
@@ -356,69 +521,99 @@ export function ClassSessionHistory({ data }: { data: ClassDailyWorkspace }) {
         </h2>
       </div>
       <div className="mt-4 divide-y">
-        {data.history.map((entry) => (
-          <div key={entry.id} className="py-3 text-sm">
-            <div className="grid gap-2 md:grid-cols-[8rem_1fr_8rem_1fr]">
-              <b>{entry.studentName}</b>
-              <span>
-                {entry.planLabel}・{entry.learningItemTitle}
-              </span>
-              <span>{statusLabels[entry.statusAfterSession]}</span>
-              <span className="text-slate-500">
-                {entry.note || "無備註"}
-                {entry.supersedesId && `（已更正：${entry.correctionReason}）`}
-                {supersededIds.has(entry.id) && "（已有後續更正）"}
-              </span>
-            </div>
-            {data.canManage &&
-              data.session.status === "completed" &&
-              !supersededIds.has(entry.id) && (
-                <details className="mt-2 rounded-lg bg-slate-50 p-3">
-                  <summary className="cursor-pointer text-xs font-bold text-teal-800">
-                    更正這筆紀錄
-                  </summary>
-                  <form
-                    action={correctDailyProgressAction}
-                    className="mt-3 grid gap-2 md:grid-cols-4"
-                  >
-                    <input type="hidden" name="classId" value={data.session.classId} />
-                    <input type="hidden" name="date" value={data.session.sessionDate} />
-                    <input type="hidden" name="progressId" value={entry.id} />
-                    <input type="hidden" name="revision" value={entry.revision} />
-                    <label className="text-xs font-bold text-slate-600">
-                      更正狀態
-                      <select
-                        className="input mt-1 w-full"
-                        name="status"
-                        defaultValue={entry.statusAfterSession}
-                      >
-                        {Object.entries(statusLabels).map(([value, label]) => (
-                          <option key={value} value={value}>
-                            {label}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="text-xs font-bold text-slate-600">
-                      備註（選填）
-                      <input
-                        className="input mt-1 w-full"
-                        name="note"
-                        maxLength={300}
-                        defaultValue={entry.note ?? ""}
-                      />
-                    </label>
-                    <label className="text-xs font-bold text-slate-600">
-                      更正原因
-                      <input className="input mt-1 w-full" name="reason" maxLength={200} required />
-                    </label>
-                    <button className="self-end rounded-lg border px-3 py-2.5 text-xs font-bold text-teal-800">
-                      儲存更正
-                    </button>
-                  </form>
-                </details>
-              )}
-          </div>
+        {groupSessionHistory(data).map((student) => (
+          <section
+            key={student.studentId}
+            className="py-4"
+            aria-label={`${student.studentName}的課堂紀錄`}
+          >
+            <h3 className="font-bold text-teal-900">{student.studentName}</h3>
+            {student.plans.map((plan) => (
+              <section
+                key={plan.id}
+                className="mt-3 rounded-xl border border-slate-200 p-3"
+                aria-label={`${plan.label} ${plan.versionLabel ?? "版本未提供"}`}
+              >
+                <h4 className="text-sm font-bold">
+                  {plan.label} · {plan.versionLabel ?? "版本未提供"}
+                </h4>
+                {plan.entries.map((entry) => (
+                  <div key={entry.id} className="py-3 text-sm">
+                    <div className="grid gap-2 md:grid-cols-[1fr_6rem_1fr]">
+                      <span>{entry.learningItemTitle}</span>
+                      <span>{statusLabels[entry.statusAfterSession]}</span>
+                      <span className="text-slate-500">
+                        {entry.note || "無備註"}
+                        {entry.supersedesId && `（已更正：${entry.correctionReason}）`}
+                        {supersededIds.has(entry.id) && "（已有後續更正）"}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500">
+                      紀錄時間：{classRecordTime(entry.recordedAt)}（台北時間）
+                    </p>
+                    {entry.itemPosition === undefined && (
+                      <p className="mt-1 text-xs text-amber-700">
+                        原始排序資料尚未載入，請確認資料庫更新腳本。
+                      </p>
+                    )}
+                    {data.canManage &&
+                      data.session.status === "completed" &&
+                      !supersededIds.has(entry.id) && (
+                        <details className="mt-2 rounded-lg bg-slate-50 p-3">
+                          <summary className="cursor-pointer text-xs font-bold text-teal-800">
+                            更正這筆紀錄
+                          </summary>
+                          <form
+                            action={correctDailyProgressAction}
+                            className="mt-3 grid gap-2 md:grid-cols-4"
+                          >
+                            <input type="hidden" name="classId" value={data.session.classId} />
+                            <input type="hidden" name="date" value={data.session.sessionDate} />
+                            <input type="hidden" name="progressId" value={entry.id} />
+                            <input type="hidden" name="revision" value={entry.revision} />
+                            <label className="text-xs font-bold text-slate-600">
+                              更正狀態
+                              <select
+                                className="input mt-1 w-full"
+                                name="status"
+                                defaultValue={entry.statusAfterSession}
+                              >
+                                {Object.entries(statusLabels).map(([value, label]) => (
+                                  <option key={value} value={value}>
+                                    {label}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="text-xs font-bold text-slate-600">
+                              備註（選填）
+                              <input
+                                className="input mt-1 w-full"
+                                name="note"
+                                maxLength={300}
+                                defaultValue={entry.note ?? ""}
+                              />
+                            </label>
+                            <label className="text-xs font-bold text-slate-600">
+                              更正原因
+                              <input
+                                className="input mt-1 w-full"
+                                name="reason"
+                                maxLength={200}
+                                required
+                              />
+                            </label>
+                            <button className="self-end rounded-lg border px-3 py-2.5 text-xs font-bold text-teal-800">
+                              儲存更正
+                            </button>
+                          </form>
+                        </details>
+                      )}
+                  </div>
+                ))}
+              </section>
+            ))}
+          </section>
         ))}
       </div>
     </section>

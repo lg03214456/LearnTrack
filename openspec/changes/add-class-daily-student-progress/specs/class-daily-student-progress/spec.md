@@ -4,6 +4,41 @@ Defines a class-session workspace that records each attending student's work aga
 
 ## ADDED Requirements
 
+### Requirement: Scoped attendance dialog
+The system SHALL offer four exclusive attendance statuses in a dialog, optional actual arrival time for late attendance, and server-recorded timestamps. Only changed students SHALL be submitted. All changes SHALL pass attendance permission, tenant/class/student/roster and optimistic concurrency checks atomically. Corrections SHALL append successors with reasons; completed-session additions SHALL require reasons. Rescheduling SHALL NOT be mapped to absence or leave automatically.
+
+#### Scenario: Cancel or stale attendance save
+- **WHEN** the operator cancels or any submitted member/revision is invalid
+- **THEN** no attendance rows are written and the existing roster and progress remain unchanged
+
+#### Scenario: Arrival and record times differ
+- **WHEN** a late student's optional arrival time is entered for a historical class
+- **THEN** it is stored for that lesson date in Asia/Taipei, independently of server-generated recorded_at
+
+### Requirement: Student-grouped original-order history
+The system SHALL group saved progress by stable student and original plan/version identity, order items by original learning-item position, display recorded timestamps without sorting by them, and preserve original and successor correction records.
+
+#### Scenario: Multiple materials and nonchronological record times
+- **WHEN** a student has entries for multiple versions recorded out of order
+- **THEN** each original plan/version has its own group and items follow material order regardless of timestamp
+
+### Requirement: Student progress checklist dialog
+The primary student progress entry SHALL open a dialog from the student's name, show that student's own current plan items grouped by material/version, and save only newly checked items as completed after confirmation. Previously completed items SHALL be readonly, unchecked items SHALL remain unchanged, and cancellation SHALL write nothing. Following the user's subsequent approved simplification, the class page SHALL NOT expose the advanced batch editor or a second unified-save button. Existing history correction SHALL remain available; backend batch actions are retained for compatibility rather than rendered as another required save.
+
+#### Scenario: Confirm selected items across materials
+- **WHEN** the operator checks pending or in-progress items from one student's own plans and confirms
+- **THEN** only those items are submitted together through the existing audited class-session action with original session/item revisions
+- **AND** success refreshes the authoritative roster and history without a second save click
+
+#### Scenario: Safe cancellation or rejected save
+- **WHEN** the operator cancels or the server rejects the selection
+- **THEN** cancellation writes nothing, rejection preserves selections, and an uncertain transport/audit outcome blocks automatic retry pending reload
+- **AND** saving blocks dismissal and duplicate submissions, and context changes cannot reveal the previous student's draft
+
+#### Scenario: Readonly and completed sessions
+- **WHEN** the operator has read-only permission or the class session is completed
+- **THEN** readonly users cannot save, and completed-session writes use the existing append operation with a required reason
+
 ### Requirement: Class-scoped daily workspace
 The system SHALL provide an authorized user with a dated class-session workspace containing students whose class enrollments are active for that session, without assigning a curriculum version to the class.
 

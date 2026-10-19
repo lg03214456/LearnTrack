@@ -4,6 +4,7 @@ import type {
 } from "@/features/access-control/access-control.types";
 import type {
   CorrectAssessmentResultCommand,
+  RecordExtraAssessmentResultCommand,
   RecordAssessmentResultCommand,
   UpdateStudentProfileCommand,
 } from "@/features/student-profile/student-profile.types";
@@ -159,6 +160,50 @@ export function correctAssessmentResult(
   return response(true, "OK", "成績已更正");
 }
 
+export function recordExtraAssessmentResult(
+  actor: AuthorizationContext,
+  command: RecordExtraAssessmentResultCommand,
+): CommandResult {
+  if (!can(actor, "assessment_history.manage"))
+    return response(false, "FORBIDDEN", "你沒有登錄成績的權限");
+  if (!accessible(actor, command.studentId))
+    return response(false, "NOT_FOUND", "找不到可管理的學生");
+  if (
+    !clean(command.termId) ||
+    !clean(command.subject) ||
+    !clean(command.title) ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(command.date) ||
+    !Number.isFinite(command.maximumScore) ||
+    command.maximumScore <= 0 ||
+    !Number.isFinite(command.score) ||
+    command.score < 0 ||
+    command.score > command.maximumScore
+  )
+    return response(false, "VALIDATION_ERROR", "請填寫完整考卷資料，且分數不可超過滿分");
+  const assessmentId = `assessment-${crypto.randomUUID()}`;
+  studentProfileStore.addAssessment({
+    id: assessmentId,
+    organizationId: actor.organizationId,
+    termId: clean(command.termId),
+    subject: clean(command.subject),
+    title: clean(command.title),
+    date: command.date,
+    maximumScore: command.maximumScore,
+  });
+  studentProfileStore.addResult({
+    id: `result-${crypto.randomUUID()}`,
+    organizationId: actor.organizationId,
+    assessmentId,
+    studentId: command.studentId,
+    score: command.score,
+    comment: clean(command.comment),
+    revision: 1,
+    updatedAt: new Date().toISOString(),
+    updatedBy: actor.profileId,
+  });
+  return response(true, "OK", "額外考卷與成績已登錄");
+}
+
 const persistenceFailure = (error: unknown, fallback: string): CommandResult => {
   if (error instanceof RepositoryError) {
     if (error.code === "FORBIDDEN") return response(false, "FORBIDDEN", "你沒有執行此操作的權限");
@@ -212,6 +257,34 @@ export async function recordAssessmentResultWithConfiguredRepository(
     return response(true, "OK", "成績已登錄");
   } catch (error) {
     return persistenceFailure(error, "成績暫時無法儲存");
+  }
+}
+
+export async function recordExtraAssessmentResultWithConfiguredRepository(
+  actor: AuthorizationContext,
+  command: RecordExtraAssessmentResultCommand,
+): Promise<CommandResult> {
+  if (authRuntimeConfig().domainDataProvider === "mock")
+    return recordExtraAssessmentResult(actor, command);
+  if (!can(actor, "assessment_history.manage"))
+    return response(false, "FORBIDDEN", "你沒有登錄成績的權限");
+  if (
+    !clean(command.termId) ||
+    !clean(command.subject) ||
+    !clean(command.title) ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(command.date) ||
+    !Number.isFinite(command.maximumScore) ||
+    command.maximumScore <= 0 ||
+    !Number.isFinite(command.score) ||
+    command.score < 0 ||
+    command.score > command.maximumScore
+  )
+    return response(false, "VALIDATION_ERROR", "請填寫完整考卷資料，且分數不可超過滿分");
+  try {
+    await supabaseStudentDetailRepository.recordExtraResult(actor, command);
+    return response(true, "OK", "額外考卷與成績已登錄");
+  } catch (error) {
+    return persistenceFailure(error, "額外考卷暫時無法儲存");
   }
 }
 

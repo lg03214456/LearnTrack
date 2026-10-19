@@ -120,6 +120,14 @@ The daily UI uses per-student expandable rows or compact panels rather than a ho
 
 ## Migration Plan
 
+### Approved checklist refinement (2026-10-19)
+
+Subsequent user decision: remove the advanced batch UI entirely from the class page, keeping direct per-student confirmation and history correction. The earlier secondary-editor decision below is superseded for the visible UI. Internal batch component/actions remain compatible; no existing records are removed.
+
+Approved attendance preview: a separate dialog selects present/late/leave/absent without defaulting untouched students to present. Late arrival time is optional, anchored to the lesson date in Asia/Taipei; recorded_at remains server-generated. Dedicated attendance.manage permission, class/student scope, roster validation, lesson revision and previous-record identity guard an atomic append-only batch. Completed-session additions and corrections require a reason. A versioned workspace RPC enriches real historical plan/item metadata and latest attendance; missing migration explicitly disables attendance while preserving existing real progress reads. No mock fallback. Rescheduling remains outside scope. History groups by stable student and plan/version identities, then original item position and correction lineage, never by record timestamp. Missing historical ordering metadata is disclosed, not fabricated.
+
+The roster's primary student-name control opens one accessible dialog containing only that student's active plan items. Previously completed items are checked and readonly; unchecked pending/in-progress items generate no write. Confirm submits only newly selected items as completed using the existing audited save/append action and original revisions. Completed sessions still require an append reason. No optimistic success, automatic retry or synthetic revisions; uncertain failures require authoritative reload. Confirmation saves that student's selection directly rather than merely staging a second save. The original status selector/batch workflow remains in a secondary collapsed section. Session/date/membership changes remount the dialog state, and saving blocks dismissal and duplicate submissions. No new tables, RPCs or environment variables.
+
 1. Add client-safe session/progress contracts and normalized resettable mock records.
 2. Add repository joins for class, roster, attendance, student plans, versions, and learning items.
 3. Add service commands for opening a session, saving a validated batch, completing a session, and appending corrections.

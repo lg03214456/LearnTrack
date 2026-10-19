@@ -56,6 +56,14 @@ const automaticClassCodeAmbiguityFixMigration = readFileSync(
   resolve(migrationsDirectory, "202610050002_fix_automatic_class_code_function_ambiguity.sql"),
   "utf8",
 );
+const missingStudentNumbersBackfillMigration = readFileSync(
+  resolve(migrationsDirectory, "202610050004_backfill_missing_student_numbers.sql"),
+  "utf8",
+);
+const curriculumStudyPlanLifecycleMigration = readFileSync(
+  resolve(migrationsDirectory, "202610070001_curriculum_study_plan_lifecycle.sql"),
+  "utf8",
+);
 const ownerBootstrap = readFileSync(
   resolve(import.meta.dirname, "../supabase/bootstrap/initialize-first-owner.sql"),
   "utf8",
@@ -412,6 +420,22 @@ describe("Supabase automatic student numbers", () => {
     expect(automaticStudentNumbersMigration).toContain("new.organization_id");
     expect(automaticStudentNumbersMigration).toContain("'STU-' || lpad");
   });
+
+  it("backfills existing blank numbers per organization without colliding with existing numbers", () => {
+    expect(missingStudentNumbersBackfillMigration).toContain(
+      "lock table public.students in share row exclusive mode",
+    );
+    expect(missingStudentNumbersBackfillMigration).toContain(
+      "partition by student.organization_id",
+    );
+    expect(missingStudentNumbersBackfillMigration).toContain(
+      "coalesce(maximum.maximum_number, 0) + missing.sequence_offset",
+    );
+    expect(missingStudentNumbersBackfillMigration).toContain(
+      "length(btrim(coalesce(student.student_number, ''))) = 0",
+    );
+    expect(missingStudentNumbersBackfillMigration).toContain("'STU-' || lpad");
+  });
 });
 
 describe("Supabase subject catalog and automatic class codes", () => {
@@ -451,5 +475,51 @@ describe("Supabase subject catalog and automatic class codes", () => {
     expect(automaticClassCodeAmbiguityFixMigration).toContain("public.save_class_aggregate");
     expect(automaticClassCodeAmbiguityFixMigration).toContain("#variable_conflict use_column");
     expect(automaticClassCodeAmbiguityFixMigration).toContain("pg_get_functiondef");
+  });
+});
+
+describe("Supabase curriculum and study-plan lifecycle", () => {
+  it("persists curriculum snapshots and enables tenant-safe RLS", () => {
+    for (const table of [
+      "curriculum_templates",
+      "curriculum_versions",
+      "curriculum_items",
+      "study_plans",
+      "student_learning_items",
+      "assessment_series",
+    ]) {
+      expect(curriculumStudyPlanLifecycleMigration).toContain(
+        `create table if not exists public.${table}`,
+      );
+      expect(curriculumStudyPlanLifecycleMigration).toContain(
+        `alter table public.${table} enable row level security;`,
+      );
+    }
+    expect(curriculumStudyPlanLifecycleMigration).toContain("private.can_access_student");
+    expect(curriculumStudyPlanLifecycleMigration).not.toMatch(/grant\s+[^;]+\s+to anon/i);
+  });
+
+  it("replaces plans without deleting completed history", () => {
+    expect(curriculumStudyPlanLifecycleMigration).toContain(
+      "create or replace function public.replace_student_study_plan",
+    );
+    expect(curriculumStudyPlanLifecycleMigration).toContain("status = 'replaced'");
+    expect(curriculumStudyPlanLifecycleMigration).toContain("status = 'removed'");
+    expect(curriculumStudyPlanLifecycleMigration).toContain("completed.status = 'completed'");
+    expect(curriculumStudyPlanLifecycleMigration).toContain("carried_from_item_id");
+    expect(curriculumStudyPlanLifecycleMigration).not.toMatch(
+      /delete from public\.(study_plans|student_learning_items)/i,
+    );
+  });
+
+  it("links curriculum and extra assessments without deleting score history", () => {
+    expect(curriculumStudyPlanLifecycleMigration).toContain("assessment_kind");
+    expect(curriculumStudyPlanLifecycleMigration).toContain("curriculum_item_id");
+    expect(curriculumStudyPlanLifecycleMigration).toContain("study_plan_id");
+    expect(curriculumStudyPlanLifecycleMigration).toContain("learning_item_id");
+    expect(curriculumStudyPlanLifecycleMigration).toContain("class_session_id");
+    expect(curriculumStudyPlanLifecycleMigration).toContain(
+      "create or replace function public.record_extra_assessment_result",
+    );
   });
 });

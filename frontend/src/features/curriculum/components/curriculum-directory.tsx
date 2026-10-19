@@ -20,10 +20,12 @@ export function CurriculumDirectoryView({
   data,
   query = {},
   canManage,
+  isMock = false,
 }: {
   data: CurriculumDirectory;
   query?: CurriculumQuery;
   canManage: boolean;
+  isMock?: boolean;
 }) {
   const tabs = [
     { label: "全部教材", count: data.summary.total },
@@ -32,15 +34,17 @@ export function CurriculumDirectoryView({
   ];
   return (
     <>
-      <div className="mb-5 flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
-        <AlertTriangle className="mt-0.5 shrink-0 text-amber-600" size={18} />
-        <div>
-          <b>開發階段資料</b>
-          <p className="mt-1 text-xs text-amber-800">
-            目前操作保存在伺服器記憶體，重新啟動後會還原；正式營運仍需 Supabase 與 RLS。
-          </p>
+      {isMock && (
+        <div className="mb-5 flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+          <AlertTriangle className="mt-0.5 shrink-0 text-amber-600" size={18} />
+          <div>
+            <b>開發階段資料</b>
+            <p className="mt-1 text-xs text-amber-800">
+              目前操作保存在伺服器記憶體，重新啟動後會還原；正式營運仍需 Supabase 與 RLS。
+            </p>
+          </div>
         </div>
-      </div>
+      )}
       <div className="flex gap-6 overflow-x-auto border-b border-slate-200">
         {tabs.map((tab) => {
           const isActive = (query.status ?? "") === (tab.status ?? "");
@@ -59,7 +63,7 @@ export function CurriculumDirectoryView({
       {canManage && <CurriculumCreateForm data={data} />}
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         {data.rows.map((row) => (
-          <CurriculumTemplateCard key={row.id} row={row} />
+          <CurriculumTemplateCard key={row.id} row={row} canManage={canManage} />
         ))}
       </div>
       {data.rows.length === 0 && (

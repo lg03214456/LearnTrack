@@ -11,7 +11,7 @@ import type {
   TemplateItem,
   StudyPlan,
   StudentLearningItem,
-} from "@/server/data/mock/curriculum";
+} from "@/server/domain/curriculum";
 import type { StudentRecord, Enrollment } from "@/server/domain/types";
 export interface CurriculumSource {
   grades: { id: string; name: string }[];
@@ -23,8 +23,8 @@ export interface CurriculumSource {
   items: TemplateItem[];
   plans: StudyPlan[];
   learningItems: StudentLearningItem[];
-  students: StudentRecord[];
-  enrollments: Enrollment[];
+  students: Pick<StudentRecord, "id" | "organizationId" | "name" | "number">[];
+  enrollments: Pick<Enrollment, "studentId" | "organizationId" | "classId" | "status">[];
 }
 const name = (rows: { id: string; name: string }[], id: string) =>
   rows.find((x) => x.id === id)?.name ?? "未知";
@@ -58,6 +58,7 @@ export function buildCurriculumDirectory(
       (!filter.gradeId || raw.gradeId === filter.gradeId) &&
       (!filter.subjectId || raw.subjectId === filter.subjectId) &&
       (!filter.publisherId || raw.publisherId === filter.publisherId) &&
+      (filter.status === "archived" ? x.isArchived : !x.isArchived) &&
       (!filter.status ||
         (filter.status === "archived"
           ? x.isArchived
@@ -68,9 +69,12 @@ export function buildCurriculumDirectory(
     rows,
     dimensions: { grades: source.grades, subjects: source.subjects, publishers: source.publishers },
     summary: {
-      total: mapped.length,
-      published: mapped.filter((x) => x.versions.some((v) => v.status === "published")).length,
-      draft: mapped.filter((x) => x.versions.some((v) => v.status === "draft")).length,
+      total: mapped.filter((x) => !x.isArchived).length,
+      published: mapped.filter(
+        (x) => !x.isArchived && x.versions.some((v) => v.status === "published"),
+      ).length,
+      draft: mapped.filter((x) => !x.isArchived && x.versions.some((v) => v.status === "draft"))
+        .length,
       archived: mapped.filter((x) => x.isArchived).length,
     },
   };
@@ -89,7 +93,11 @@ export function buildCurriculumDetail(
         (x) => x.id === version.templateId && x.organizationId === actor.organizationId,
       );
   if (!version || !template) return;
-  const directory = buildCurriculumDirectory(actor, source).rows.find((x) => x.id === template.id)!;
+  const directory = buildCurriculumDirectory(
+    actor,
+    source,
+    template.isArchived ? { status: "archived" } : {},
+  ).rows.find((x) => x.id === template.id)!;
   return {
     template: directory,
     versionId: version.id,
@@ -131,17 +139,21 @@ export function buildStudentStudyPlanPage(
   );
   if (!student) return;
   const plans: StudyPlanView[] = source.plans
-    .filter((x) => x.studentId === studentId && x.organizationId === actor.organizationId)
+    .filter(
+      (x) => x.studentId === studentId && x.organizationId === actor.organizationId && !x.deletedAt,
+    )
     .map((plan) => {
       const version = source.versions.find((x) => x.id === plan.versionId)!,
         template = source.templates.find((x) => x.id === version.templateId)!,
         items = source.learningItems
           .filter((x) => x.planId === plan.id)
           .sort((a, b) => a.position - b.position),
-        included = items.filter((x) => x.status !== "skipped"),
+        included = items.filter((x) => !["skipped", "removed"].includes(x.status)),
         completed = included.filter((x) => x.status === "completed").length;
       return {
         id: plan.id,
+        termId: plan.termId,
+        subjectId: plan.subjectId,
         term: name(source.terms, plan.termId),
         subject: name(source.subjects, plan.subjectId),
         grade: name(source.grades, plan.gradeId),
@@ -149,6 +161,8 @@ export function buildStudentStudyPlanPage(
         templateName: template.name,
         version: version.number,
         status: plan.status,
+        replacedAt: plan.replacedAt,
+        completedAt: plan.completedAt,
         completed,
         total: included.length,
         percentage: included.length ? Math.round((completed / included.length) * 100) : 0,
@@ -161,11 +175,16 @@ export function buildStudentStudyPlanPage(
     availableVersions: source.versions
       .filter(
         (x) =>
+          x.organizationId === actor.organizationId &&
           x.status === "published" &&
-          source.templates.some((t) => t.id === x.templateId && !t.isArchived),
+          source.templates.some(
+            (t) =>
+              t.organizationId === actor.organizationId && t.id === x.templateId && !t.isArchived,
+          ),
       )
       .map((x) => ({
         id: x.id,
+        subjectId: source.templates.find((t) => t.id === x.templateId)!.subjectId,
         label: `${source.templates.find((t) => t.id === x.templateId)!.name} v${x.number}`,
       })),
     terms: source.terms,

@@ -21,6 +21,10 @@ function clientWith(dataByTable: Record<string, unknown[]>, rpc = vi.fn()) {
             filters.push([table, column, value]);
             return query;
           },
+          in: (column: string, value: unknown[]) => {
+            filters.push([table, column, value]);
+            return query;
+          },
           then: (resolve: (value: typeof result) => unknown) =>
             Promise.resolve(result).then(resolve),
         };
@@ -32,6 +36,37 @@ function clientWith(dataByTable: Record<string, unknown[]>, rpc = vi.fn()) {
 }
 
 describe("Supabase student detail repository", () => {
+  it("does not load assessment picker tables on other tabs", async () => {
+    const stub = clientWith({});
+    const repository = new SupabaseStudentDetailRepository(async () => stub.client);
+    await repository.get(
+      resolveMockIdentity("owner"),
+      "stu-1",
+      { page: 1, pageSize: 20 },
+      { includeAssessmentOptions: false },
+    );
+    expect(
+      stub.selections.some(
+        ([table]) => table === "study_plans" || table === "student_learning_items",
+      ),
+    ).toBe(false);
+    expect(stub.filters.filter(([, column]) => column === "organization_id")).toHaveLength(7);
+  });
+
+  it("keeps active-plan item lookup scoped to the organization", async () => {
+    const stub = clientWith({
+      study_plans: [
+        { id: "plan-a", status: "active", deleted_at: null },
+        { id: "plan-replaced", status: "replaced", deleted_at: null },
+      ],
+    });
+    const repository = new SupabaseStudentDetailRepository(async () => stub.client);
+    await repository.get(resolveMockIdentity("owner"), "stu-1", { page: 1, pageSize: 20 });
+    expect(stub.filters).toContainEqual(["study_plans", "organization_id", "org-001"]);
+    expect(stub.filters).toContainEqual(["study_plans", "student_id", "stu-1"]);
+    expect(stub.filters).toContainEqual(["student_learning_items", "organization_id", "org-001"]);
+    expect(stub.filters).toContainEqual(["student_learning_items", "study_plan_id", ["plan-a"]]);
+  });
   it("maps profile, contact, class, and assessment rows within the actor organization", async () => {
     const stub = clientWith({
       students: [
@@ -124,7 +159,7 @@ describe("Supabase student detail repository", () => {
       guardians: [{ name: "家長", phone: "0988" }],
     });
     expect(detail?.assessment.rows[0]).toMatchObject({ score: 88, percentage: 88 });
-    expect(stub.filters.filter(([, column]) => column === "organization_id")).toHaveLength(7);
+    expect(stub.filters.filter(([, column]) => column === "organization_id")).toHaveLength(8);
     expect(stub.filters).toEqual(
       expect.arrayContaining([
         ["students", "id", "stu-1"],

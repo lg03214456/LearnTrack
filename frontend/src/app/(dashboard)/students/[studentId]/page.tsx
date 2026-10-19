@@ -17,6 +17,11 @@ import { getAuthorizationContext } from "@/server/auth/identity";
 import { can } from "@/server/authorization/policy";
 import { curriculumRepository } from "@/server/repositories/curriculum";
 import { studentDetailRepository } from "@/server/repositories/student-detail";
+import { examRangeRepository } from "@/server/repositories/exam-ranges";
+import { RepositoryError } from "@/server/repositories/repository-error";
+import { StudentExamRanges } from "@/features/curriculum/components/student-exam-ranges";
+import type { ExamRangeWorkspace } from "@/features/curriculum/exam-range.types";
+import { StudentSetup } from "@/features/students/components/student-setup";
 
 const isStudentDetailSection = (value?: string): value is StudentDetailSection =>
   value === "overview" || value === "sessions" || value === "assessments" || value === "plans";
@@ -46,19 +51,29 @@ export default async function Page({
     page: Math.max(1, Number(query.page) || 1),
     pageSize: 20,
   };
-  const detail = await studentDetailRepository.get(actor, studentId, filters);
-  if (!detail) notFound();
   const canViewPlans = can(actor, "study_plans.read");
   const requestedSection = isStudentDetailSection(query.tab) ? query.tab : "overview";
   const activeSection =
     requestedSection === "plans" && !canViewPlans ? "overview" : requestedSection;
+  const detail = await studentDetailRepository.get(actor, studentId, filters, {
+    includeAssessmentOptions: activeSection === "assessments",
+  });
+  if (!detail) notFound();
   const plans =
     canViewPlans && activeSection === "plans"
-      ? curriculumRepository.studentPlans(actor, studentId)
+      ? await curriculumRepository.studentPlans(actor, studentId)
       : undefined;
   const parentHref = query.classId
     ? `/students?classId=${encodeURIComponent(query.classId)}`
     : "/students";
+  let examRanges: ExamRangeWorkspace | null = null;
+  if (plans && activeSection === "plans") {
+    try {
+      examRanges = await examRangeRepository.read(actor, studentId);
+    } catch (error) {
+      if (!(error instanceof RepositoryError)) throw error;
+    }
+  }
 
   return (
     <>
@@ -80,6 +95,19 @@ export default async function Page({
         </div>
       )}
       <StudentProfileHero detail={detail} />
+      {can(actor, "students.manage") && actor.scope.kind === "organization-wide" && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-white p-4">
+          <p className="text-sm text-slate-600">
+            班級：{detail.profile.classes.map((item) => item.name).join("、") || "尚未設定"} ·
+            教材與段考狀態可開啟設定確認
+          </p>
+          <StudentSetup
+            key={`${actor.organizationId}:${actor.membershipId}:${studentId}`}
+            contextKey={`${actor.organizationId}:${actor.membershipId}`}
+            studentId={studentId}
+          />
+        </div>
+      )}
       <section className="card overflow-hidden">
         <StudentDetailMenu
           activeSection={activeSection}
@@ -106,14 +134,12 @@ export default async function Page({
             />
           )}{" "}
           {activeSection === "assessments" && (
-            <>
-              <StudentAssessmentHistory detail={detail} filters={filters} classId={query.classId} />
-              <StudentDetailManagement
-                detail={detail}
-                canManageProfile={false}
-                canManageAssessments={can(actor, "assessment_history.manage")}
-              />
-            </>
+            <StudentAssessmentHistory
+              detail={detail}
+              filters={filters}
+              classId={query.classId}
+              canManageAssessments={can(actor, "assessment_history.manage")}
+            />
           )}
           {activeSection === "plans" && plans && (
             <section aria-labelledby="study-plan-heading">
@@ -126,6 +152,11 @@ export default async function Page({
                   查看各科教材完成比例，並更新目前學習狀態。
                 </p>
               </div>
+              <StudentExamRanges
+                studentId={studentId}
+                workspace={examRanges}
+                canManage={can(actor, "study_plans.manage")}
+              />
               <StudentStudyPlansView data={plans} canManage={can(actor, "study_plans.manage")} />
             </section>
           )}

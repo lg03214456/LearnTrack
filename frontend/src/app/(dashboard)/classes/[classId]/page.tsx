@@ -1,8 +1,5 @@
 import { notFound } from "next/navigation";
-import {
-  completeClassSessionAction,
-  openClassSessionAction,
-} from "@/app/actions/class-session-actions";
+import { completeClassSessionAction } from "@/app/actions/class-session-actions";
 import { PageHeader } from "@/components/page-header";
 import { AccessDenied } from "@/features/access-control/components/access-denied";
 import {
@@ -12,6 +9,7 @@ import {
 import { getAuthorizationContext } from "@/server/auth/identity";
 import { can } from "@/server/authorization/policy";
 import { classSessionRepository } from "@/server/repositories/class-session";
+import { ClassSessionDateNavigation } from "@/features/class-sessions/components/class-session-date-navigation";
 
 const isoToday = () =>
   new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Taipei" }).format(new Date());
@@ -28,7 +26,7 @@ export default async function Page({
   const { classId } = await params;
   const query = await searchParams;
   const date = /^\d{4}-\d{2}-\d{2}$/.test(query.date ?? "") ? query.date! : isoToday();
-  const data = classSessionRepository.open(actor, classId, date);
+  const data = await classSessionRepository.open(actor, classId, date);
   if (!data) notFound();
 
   return (
@@ -47,29 +45,31 @@ export default async function Page({
           {query.notice}
         </div>
       )}
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <form action={openClassSessionAction} className="flex items-end gap-2">
-          <input type="hidden" name="classId" value={classId} />
-          <label className="text-xs font-bold text-slate-600">
-            課堂日期
-            <input className="input mt-1" type="date" name="date" defaultValue={date} />
-          </label>
-          <button className="rounded-lg border px-3 py-2.5 text-sm font-bold">切換日期</button>
-        </form>
-        {data.canManage && data.session.status === "draft" && (
-          <form action={completeClassSessionAction}>
-            <input type="hidden" name="classId" value={classId} />
-            <input type="hidden" name="sessionId" value={data.session.id} />
-            <input type="hidden" name="sessionRevision" value={data.session.revision} />
-            <input type="hidden" name="date" value={date} />
-            <button className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-800">
-              完成今日課堂
-            </button>
-          </form>
-        )}
-      </div>
-      <ClassDailyWorkspaceView data={data} />
-      <ClassSessionHistory data={data} />
+      <ClassSessionDateNavigation
+        classId={classId}
+        date={date}
+        actions={
+          data.canManage &&
+          data.session.status === "draft" && (
+            <form action={completeClassSessionAction}>
+              <input type="hidden" name="classId" value={classId} />
+              <input type="hidden" name="sessionId" value={data.session.id} />
+              <input type="hidden" name="sessionRevision" value={data.session.revision} />
+              <input type="hidden" name="date" value={date} />
+              <button className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-800">
+                完成今日課堂
+              </button>
+            </form>
+          )
+        }
+      >
+        <ClassDailyWorkspaceView
+          key={`${actor.organizationId}:${actor.membershipId}:${classId}:${date}`}
+          contextKey={`${actor.organizationId}:${actor.membershipId}`}
+          data={data}
+        />
+        <ClassSessionHistory data={data} />
+      </ClassSessionDateNavigation>
     </>
   );
 }

@@ -2,6 +2,7 @@ export type ProgressStatus = "ahead" | "normal" | "behind";
 
 export interface ProgressRow {
   studentId: string;
+  classId: string;
   name: string;
   number: string;
   className: string;

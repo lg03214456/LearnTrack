@@ -20,9 +20,35 @@ const source = (): StudentDetailSource => ({
   results: studentProfileStore.results,
   sessions: studentProfileStore.sessions,
   terms: curriculumStore.terms,
+  boundAssessmentIds: ["exam-m1", "exam-m2", "exam-e1"],
 });
 
 describe("student detail builder", () => {
+  it("only offers bound assessments and keeps other scores readable", () => {
+    const detail = buildStudentDetail(
+      resolveMockIdentity("owner"),
+      "stu-2",
+      { page: 1, pageSize: 20 },
+      { ...source(), boundAssessmentIds: ["exam-e1"] },
+    )!;
+    expect(detail.assessment.availableAssessments.map((assessment) => assessment.id)).toEqual([
+      "exam-e1",
+    ]);
+    expect(detail.assessment.rows).toHaveLength(1);
+  });
+  it("excludes this student's recorded assessments independently of history filters", () => {
+    const detail = buildStudentDetail(
+      resolveMockIdentity("owner"),
+      "stu-2",
+      { subject: "英文", page: 2, pageSize: 1 },
+      source(),
+    )!;
+    expect(detail.assessment.availableAssessments.map((assessment) => assessment.id)).toEqual([
+      "exam-m2",
+      "exam-e1",
+    ]);
+    expect(detail.assessment.rows).toEqual([]);
+  });
   it("enforces organization and assigned-class scope", () => {
     expect(canAccessStudent(resolveMockIdentity("teacher"), "stu-1", source())).toBe(true);
     expect(canAccessStudent(resolveMockIdentity("teacher"), "stu-4", source())).toBe(false);

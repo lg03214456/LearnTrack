@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   loadClassCreateViewAction,
   loadClassEditViewAction,
+  loadClassRosterViewAction,
 } from "@/app/actions/class-management-actions";
 import { ClassesView } from "./classes-view";
 import type { ClassEditorView, ClassOverviewRow } from "../class-management.types";
@@ -10,6 +11,7 @@ vi.mock("@/app/actions/class-management-actions", () => ({
   changeClassLifecycleAction: vi.fn(),
   loadClassCreateViewAction: vi.fn(),
   loadClassEditViewAction: vi.fn(),
+  loadClassRosterViewAction: vi.fn(),
   saveClassStateAction: vi.fn(),
 }));
 const row: ClassOverviewRow = {
@@ -57,15 +59,31 @@ const createView: ClassEditorView = {
 };
 describe("class overview", () => {
   afterEach(cleanup);
-  it("links to the shared filtered roster and exposes the editor action", () => {
+  it("exposes roster and editor actions", () => {
     render(<ClassesView rows={[row]} canCreate />);
-    expect(screen.getByLabelText("查看數學班學生名單")).toHaveAttribute(
-      "href",
-      "/students?classId=cls-1",
-    );
+    expect(screen.getByLabelText("查看數學班學生名單")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "編輯" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "新增班級" })).toBeInTheDocument();
     expect(screen.getByLabelText("進入數學班今日課堂")).toHaveAttribute("href", "/classes/cls-1");
+  });
+  it("opens a read-only roster dialog with links to student profiles", async () => {
+    vi.mocked(loadClassRosterViewAction).mockResolvedValue({
+      classId: "cls-1",
+      className: "數學班",
+      classCode: "M1",
+      capacity: 20,
+      students: [{ id: "student-a", name: "學生甲", number: "STU-0001", status: "active" }],
+    });
+    render(<ClassesView rows={[row]} canCreate />);
+
+    fireEvent.click(screen.getByLabelText("查看數學班學生名單"));
+
+    expect(await screen.findByRole("dialog", { name: "數學班・學生名單" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "查看學生甲個人資料" })).toHaveAttribute(
+      "href",
+      "/students/student-a?classId=cls-1",
+    );
+    expect(screen.queryByRole("link", { name: "前往學生名單" })).not.toBeInTheDocument();
   });
   it("opens and closes the create editor in a dialog without navigating", async () => {
     vi.mocked(loadClassCreateViewAction).mockResolvedValue(createView);

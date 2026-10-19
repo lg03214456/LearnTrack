@@ -40,7 +40,7 @@ const source = {
   ],
   class_assignments: [{ class_id: "class-a", membership_id: "membership-teacher" }],
   class_enrollments: [{ class_id: "class-a", student_id: "student-a" }],
-  students: [{ id: "student-a", display_name: "學生甲", student_number: "A001" }],
+  students: [{ id: "student-a", display_name: "學生甲", student_number: "A001", status: "active" }],
   organization_memberships: [{ id: "membership-teacher", profile_id: "profile-teacher" }],
   profiles: [{ id: "profile-teacher", display_name: "王老師" }],
   subjects: [
@@ -99,5 +99,17 @@ describe("Supabase class management repository", () => {
         student_ids: ["student-a"],
       }),
     );
+  });
+
+  it("maps only enrolled students into the read-only class roster", async () => {
+    const repository = new SupabaseClassManagementRepository(async () => clientWith(source));
+
+    await expect(repository.roster(resolveMockIdentity("owner"), "class-a")).resolves.toEqual({
+      classId: "class-a",
+      className: "數學班",
+      classCode: "MATH-A",
+      capacity: 12,
+      students: [{ id: "student-a", name: "學生甲", number: "A001", status: "active" }],
+    });
   });
 });

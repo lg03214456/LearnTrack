@@ -23,6 +23,7 @@ export interface StudentDetailSource {
   results: StudentAssessmentResult[];
   sessions: CourseSessionRecord[];
   terms: { id: string; name: string }[];
+  boundAssessmentIds?: string[];
 }
 
 export function canAccessStudent(
@@ -64,6 +65,11 @@ export function buildStudentDetail(
     (row) => row.studentId === studentId && row.organizationId === actor.organizationId,
   );
   if (!profile) return;
+  const recordedAssessmentIds = new Set(
+    source.results
+      .filter((row) => row.studentId === studentId && row.organizationId === actor.organizationId)
+      .map((row) => row.assessmentId),
+  );
   const classes = source.enrollments
     .filter(
       (row) =>
@@ -174,7 +180,13 @@ export function buildStudentDetail(
         ),
       ],
       availableAssessments: source.assessments
-        .filter((row) => row.organizationId === actor.organizationId)
+        .filter(
+          (row) =>
+            row.organizationId === actor.organizationId && !recordedAssessmentIds.has(row.id),
+        )
+        .filter(
+          (row) => source.boundAssessmentIds?.includes(row.id) ?? false,
+        )
         .map(({ id, termId, subject, title, date, maximumScore }) => ({
           id,
           termId,

@@ -4,6 +4,7 @@ import { CurriculumDirectoryView } from "@/features/curriculum/components/curric
 import { getAuthorizationContext } from "@/server/auth/identity";
 import { can } from "@/server/authorization/policy";
 import { curriculumRepository } from "@/server/repositories/curriculum";
+import { authRuntimeConfig } from "@/server/auth/provider-config";
 import type { CurriculumQuery, VersionStatus } from "@/features/curriculum/curriculum.types";
 export default async function CurriculumPage({
   searchParams,
@@ -20,6 +21,7 @@ export default async function CurriculumPage({
     publisherId: params.publisherId,
     status: ["draft", "published", "archived"].includes(status ?? "") ? status : undefined,
   };
+  const data = await curriculumRepository.list(actor, query);
   return (
     <>
       <PageHeader
@@ -28,10 +30,16 @@ export default async function CurriculumPage({
         description="依年級、科目與版本維護可重複使用的學習內容。"
       />
       <CurriculumDirectoryView
-        data={curriculumRepository.list(actor, query)}
+        isMock={authRuntimeConfig().domainDataProvider === "mock"}
+        data={data}
         query={query}
         canManage={can(actor, "curriculum.manage")}
       />
+      {params.notice && (
+        <p role="status" className="mt-4 rounded-xl border p-3 text-sm">
+          {params.notice}
+        </p>
+      )}
     </>
   );
 }

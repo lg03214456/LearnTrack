@@ -115,17 +115,17 @@ export function createAndActivatePlan(
     t = v && curriculumStore.templates.find((x) => x.id === v.templateId && !x.isArchived);
   if (!v || !t || !curriculumStore.terms.some((x) => x.id === input.termId))
     return out(false, "VALIDATION_ERROR", "請選擇可用學期與已發布版本");
-  if (
-    curriculumStore.plans.some(
-      (x) =>
-        x.studentId === input.studentId &&
-        x.termId === input.termId &&
-        x.subjectId === t.subjectId &&
-        x.status === "active",
-    )
-  )
-    return out(false, "CONFLICT", "同學期科目已有修課計畫");
+  const currentPlan = curriculumStore.plans.find(
+    (x) =>
+      x.organizationId === actor.organizationId &&
+      x.studentId === input.studentId &&
+      x.termId === input.termId &&
+      x.subjectId === t.subjectId &&
+      x.status === "active",
+  );
+  if (currentPlan?.versionId === v.id) return out(false, "CONFLICT", "此教材版本已在使用中");
   const planId = `plan-${id()}`;
+  const now = new Date().toISOString();
   curriculumStore.addPlan({
     id: planId,
     organizationId: actor.organizationId,
@@ -135,25 +135,60 @@ export function createAndActivatePlan(
     subjectId: t.subjectId,
     versionId: v.id,
     status: "active",
+    revision: 1,
   });
+  const currentItems = currentPlan
+    ? curriculumStore.learningItems.filter((item) => item.planId === currentPlan.id)
+    : [];
   curriculumStore.addLearningItems(
     curriculumStore.items
       .filter((x) => x.versionId === v.id)
-      .map((x) => ({
-        id: `learn-${id()}`,
-        organizationId: actor.organizationId,
-        planId,
-        sourceItemId: x.id,
-        type: x.type,
-        title: x.title,
-        position: x.position,
-        status: "pending",
-        isCustom: false,
-        revision: 1,
-      })),
+      .map((x) => {
+        const completedItem = currentItems.find(
+          (item) => item.lineageId === x.lineageId && item.status === "completed",
+        );
+        return {
+          id: `learn-${id()}`,
+          organizationId: actor.organizationId,
+          planId,
+          sourceItemId: x.id,
+          lineageId: x.lineageId,
+          type: x.type,
+          title: x.title,
+          position: x.position,
+          status: completedItem ? ("completed" as const) : ("pending" as const),
+          isCustom: false,
+          revision: 1,
+          completedAt: completedItem?.completedAt ?? (completedItem ? now : undefined),
+          carriedFromItemId: completedItem?.id,
+        };
+      }),
   );
-  return out(true, "OK", "修課計畫已啟用");
+  if (currentPlan) {
+    curriculumStore.updatePlan({
+      ...currentPlan,
+      status: "replaced",
+      replacedByPlanId: planId,
+      replacedAt: now,
+      revision: currentPlan.revision + 1,
+    });
+    curriculumStore.replaceLearningItems(
+      curriculumStore.learningItems.map((item) =>
+        item.planId === currentPlan.id && !["completed", "removed"].includes(item.status)
+          ? {
+              ...item,
+              status: "removed" as const,
+              removedAt: now,
+              removedReason: "修課計畫已更換",
+              revision: item.revision + 1,
+            }
+          : item,
+      ),
+    );
+  }
+  return out(true, "OK", currentPlan ? "修課計畫已更換" : "修課計畫已啟用");
 }
+
 export function adjustLearningItem(
   actor: AuthorizationContext,
   input: {

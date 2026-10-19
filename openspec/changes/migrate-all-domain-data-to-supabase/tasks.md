@@ -29,6 +29,8 @@
 
 ## 5. Daily sessions and attendance
 
+2026-10-10 partial implementation: daily classroom read/save/append/complete/correct now selects the domain provider and uses user-session RPCs in Supabase mode. Added `202610100001_class_session_functions.sql` (not applied to a live database in this session). Focused tests: 38 passed; full tests: 312 passed / 77 files; lint, typecheck, build passed. Format check still reports 49 pre-existing files. Attendance editor, curriculum/study-plan CRUD adapter switching, real-JWT RLS and database transaction/reload acceptance remain pending, so 5.2–5.4 are not marked complete.
+
 - [x] 5.1 Add migrations for `class_sessions`, `class_session_members`, `attendance_records`, and `student_session_progress` with uniqueness, revision, correction lineage, and indexes; verify static migration tests.
 - [ ] 5.2 Add tenant/relationship RLS and atomic functions for opening sessions, saving attendance, recording progress, completing sessions, and corrections; verify real-JWT integration cases.
 - [ ] 5.3 Implement Supabase class-session and attendance repositories behind current contracts; verify repository/service/action tests and transaction rollback behavior.
@@ -36,12 +38,16 @@
 
 ## 6. Curriculum and study plans
 
+2026-10-10 partial implementation: curriculum library and student-plan reads/writes now select the domain provider. Added `202610100002_curriculum_functions.sql`, user-JWT read/mutation adapter, persistence service, version/item revision checks and a published-version copy UI. Replacement closes the old active slot before insertion and preserves completed lineage items. Full tests: 351 passed / 81 files; lint, typecheck and build passed. Embedded PostgreSQL smoke tests exercised real transaction/constraint behavior with isolated fixture authorization helpers (NOT live Supabase JWT/RLS). Local returned PGRST202 for the not-yet-installed read RPC; live migration/application acceptance is pending. Existing grade/publisher/term catalogs remain fixed; configurable reference tables and custom-item workflows are not completed, so 6.1–6.4 remain unchecked.
+
 - [ ] 6.1 Add reference and curriculum migrations for grades, subjects, publishers, terms, templates, versions, items, plans, and learning items; verify keys, positions, revisions, and indexes.
 - [ ] 6.2 Add RLS and atomic functions for template creation, version publication, item reorder, plan replacement, and learning-item updates; verify tenant and lifecycle restrictions with real JWTs.
 - [ ] 6.3 Implement Supabase curriculum and study-plan repositories, remove production imports of `curriculumStore`, and verify Mock/Supabase contract tests.
 - [ ] 6.4 Verify curriculum, plan, custom item, reorder, publication, and progress workflows persist after restart without changing current UI behavior.
 
 ## 7. Assessments and student history
+
+2026-10-11 教材編輯補充（6.x 部分進展，非全階段完成）：三點選單基本資料／草稿內容編輯已接 provider-aware repository/service/actions；新增 `202610110001_curriculum_template_editing.sql`，template revision、published classification lock 與 tenant permission checks；隔離 PostgreSQL 驗證通過，實際 Supabase 套用與 JWT／RLS matrix 待驗收。
 
 - [x] 7.1 Add migrations for assessments and assessment results and finalize student profile/contact storage mapping; verify foreign keys, revisions, score validation, and organization indexes.
 - [ ] 7.2 Add RLS policies for teacher/class/student/contact visibility and mutation permissions; verify the persona matrix in an isolated database.

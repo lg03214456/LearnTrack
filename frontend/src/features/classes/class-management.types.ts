@@ -68,6 +68,19 @@ export interface ClassEditorView {
   studentOptions: StudentEditorOption[];
   capabilities: ClassCapability;
 }
+export interface ClassRosterStudent {
+  id: string;
+  name: string;
+  number: string;
+  status: "active" | "leave";
+}
+export interface ClassRosterView {
+  classId: string;
+  className: string;
+  classCode: string;
+  capacity: number | null;
+  students: ClassRosterStudent[];
+}
 export interface ExpectedAttendanceClass {
   classId: string;
   className: string;

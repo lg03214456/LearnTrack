@@ -6,10 +6,12 @@ import {
   changeClassLifecycleAction,
   loadClassCreateViewAction,
   loadClassEditViewAction,
+  loadClassRosterViewAction,
 } from "@/app/actions/class-management-actions";
 import { Card, ProgressBar } from "@/components/ui";
-import type { ClassEditorView, ClassOverviewRow } from "../class-management.types";
+import type { ClassEditorView, ClassOverviewRow, ClassRosterView } from "../class-management.types";
 import { ClassEditorDialog } from "./class-editor-dialog";
+import { ClassRosterDialog } from "./class-roster-dialog";
 const typeLabels = { progress: "進度授課班", individual: "個別指導班", study: "自習加強班" },
   statusLabels = {
     recruiting: "招生中",
@@ -23,7 +25,10 @@ export function ClassesView({ rows, canCreate }: { rows: ClassOverviewRow[]; can
     [grade, setGrade] = useState(""),
     [editorView, setEditorView] = useState<ClassEditorView | null>(null),
     [loadingEditorId, setLoadingEditorId] = useState<string | null>(null),
-    [editorViewError, setEditorViewError] = useState("");
+    [editorViewError, setEditorViewError] = useState(""),
+    [rosterView, setRosterView] = useState<ClassRosterView | null>(null),
+    [loadingRosterId, setLoadingRosterId] = useState<string | null>(null),
+    [rosterViewError, setRosterViewError] = useState("");
   const handleOpenCreateDialog = async () => {
     setLoadingEditorId("new");
     setEditorViewError("");
@@ -45,6 +50,17 @@ export function ClassesView({ rows, canCreate }: { rows: ClassOverviewRow[]; can
       return;
     }
     setEditorView(view);
+  };
+  const handleOpenRosterDialog = async (classId: string) => {
+    setLoadingRosterId(classId);
+    setRosterViewError("");
+    const view = await loadClassRosterViewAction(classId);
+    setLoadingRosterId(null);
+    if (!view) {
+      setRosterViewError("無法載入班級學生名單，請重新整理後再試。");
+      return;
+    }
+    setRosterView(view);
   };
   const filteredClasses = useMemo(
     () =>
@@ -76,6 +92,14 @@ export function ClassesView({ rows, canCreate }: { rows: ClassOverviewRow[]; can
           className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
         >
           {editorViewError}
+        </p>
+      )}
+      {rosterViewError && (
+        <p
+          role="status"
+          className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+        >
+          {rosterViewError}
         </p>
       )}
       <Card className="flex flex-wrap gap-3 p-4">
@@ -168,14 +192,16 @@ export function ClassesView({ rows, canCreate }: { rows: ClassOverviewRow[]; can
                   今日課堂
                 </Link>
               )}
-              <Link
+              <button
+                type="button"
                 aria-label={`查看${row.name}學生名單`}
-                href={`/students?classId=${row.id}`}
+                disabled={loadingRosterId !== null}
+                onClick={() => handleOpenRosterDialog(row.id)}
                 className="rounded-lg border px-3 py-2 text-xs font-bold text-slate-700"
               >
                 <Users size={13} className="mr-1 inline" />
-                查看名單
-              </Link>
+                {loadingRosterId === row.id ? "載入中…" : "查看名單"}
+              </button>
               {row.capabilities.canEdit && (
                 <button
                   type="button"
@@ -219,6 +245,7 @@ export function ClassesView({ rows, canCreate }: { rows: ClassOverviewRow[]; can
         <Card className="mt-5 p-12 text-center text-slate-500">沒有符合條件的班級</Card>
       )}
       {editorView && <ClassEditorDialog view={editorView} onClose={() => setEditorView(null)} />}
+      {rosterView && <ClassRosterDialog view={rosterView} onClose={() => setRosterView(null)} />}
     </>
   );
 }

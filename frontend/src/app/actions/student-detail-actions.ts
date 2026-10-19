@@ -6,6 +6,7 @@ import { getAuthProviders } from "@/server/auth/providers";
 import { executeAuditedMutation } from "@/server/audit/audit-service";
 import {
   correctAssessmentResultWithConfiguredRepository,
+  recordExtraAssessmentResultWithConfiguredRepository,
   recordAssessmentResultWithConfiguredRepository,
   updateStudentProfileWithConfiguredRepository,
 } from "@/server/services/student-detail-service";
@@ -152,4 +153,70 @@ export async function correctAssessmentResultStateAction(
   });
   if (outcome.ok) revalidatePath(`/students/${studentId}`);
   return state(outcome, data);
+}
+
+export interface ExtraAssessmentFormState extends CommandResult {
+  values: {
+    termId: string;
+    subject: string;
+    title: string;
+    date: string;
+    maximumScore: string;
+    score: string;
+    comment: string;
+  };
+}
+
+export async function recordExtraAssessmentResultStateAction(
+  _: ExtraAssessmentFormState,
+  data: FormData,
+): Promise<ExtraAssessmentFormState> {
+  const actor = await getAuthorizationContext();
+  const studentId = field(data, "studentId");
+  const values = {
+    termId: field(data, "termId"),
+    subject: field(data, "subject"),
+    title: field(data, "title"),
+    date: field(data, "date"),
+    maximumScore: field(data, "maximumScore"),
+    score: field(data, "score"),
+    comment: field(data, "comment"),
+  };
+  const outcome = await executeAuditedMutation({
+    repository: getAuthProviders().audit,
+    event: {
+      actor,
+      organizationId: actor.organizationId,
+      action: "assessment.changed",
+      resourceType: "student-assessment",
+      resourceId: studentId,
+      metadata: { source: "extra" },
+    },
+    mutate: () =>
+      recordExtraAssessmentResultWithConfiguredRepository(actor, {
+        studentId,
+        termId: values.termId,
+        subject: values.subject,
+        title: values.title,
+        date: values.date,
+        maximumScore: Number(values.maximumScore),
+        score: Number(values.score),
+        comment: values.comment,
+      }),
+  });
+  if (outcome.ok) revalidatePath(`/students/${studentId}`);
+  return {
+    ...outcome,
+    values: outcome.ok
+      ? {
+          termId: "",
+          subject: "",
+          title: "",
+          date: "",
+          maximumScore: "100",
+          score: "",
+          comment: "",
+        }
+      : values,
+  };
 }

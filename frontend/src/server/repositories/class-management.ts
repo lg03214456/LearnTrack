@@ -3,6 +3,7 @@ import type { AuthorizationContext } from "@/features/access-control/access-cont
 import type {
   ClassEditorView,
   ClassOverviewRow,
+  ClassRosterView,
   ExpectedAttendanceClass,
 } from "@/features/classes/class-management.types";
 import { can, canAccessClass } from "@/server/authorization/policy";
@@ -157,6 +158,40 @@ export const mockClassManagementRepository = {
       capabilities: capabilities(actor, record?.id),
     };
   },
+  async roster(actor: AuthorizationContext, classId: string): Promise<ClassRosterView | null> {
+    const record = classManagementStore.classes.find(
+      (item) =>
+        item.id === classId &&
+        item.organizationId === actor.organizationId &&
+        canAccessClass(actor, item.id),
+    );
+    if (!record) return null;
+    const enrolledStudentIds = new Set(
+      classManagementStore.enrollments
+        .filter((enrollment) => enrollment.classId === record.id && enrollment.status === "active")
+        .map((enrollment) => enrollment.studentId),
+    );
+    return {
+      classId: record.id,
+      className: record.name,
+      classCode: record.code,
+      capacity: record.capacity,
+      students: students
+        .filter(
+          (student) =>
+            student.organizationId === actor.organizationId &&
+            student.status !== "archived" &&
+            enrolledStudentIds.has(student.id),
+        )
+        .map((student) => ({
+          id: student.id,
+          name: student.name,
+          number: student.number,
+          status: student.status === "leave" ? ("leave" as const) : ("active" as const),
+        }))
+        .sort((a, b) => a.number.localeCompare(b.number)),
+    };
+  },
   async expectedAttendance(
     actor: AuthorizationContext,
     date: string,
@@ -222,6 +257,12 @@ export const classManagementRepository = {
       mock: mockClassManagementRepository,
       supabase: supabaseClassManagementRepository,
     }).editor(actor, classId);
+  },
+  roster(actor: AuthorizationContext, classId: string) {
+    return selectDomainRepository({
+      mock: mockClassManagementRepository,
+      supabase: supabaseClassManagementRepository,
+    }).roster(actor, classId);
   },
   expectedAttendance(actor: AuthorizationContext, date: string) {
     return selectDomainRepository({

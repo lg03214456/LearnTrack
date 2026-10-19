@@ -24,6 +24,40 @@ const owner: AuthorizationContext = {
 };
 const source = () => ({ ...curriculumStore, students, enrollments });
 describe("curriculum view-model builders", () => {
+  it("hides archived templates but preserves their detail and student progress", () => {
+    const original = source();
+    const archived = {
+      ...original,
+      templates: original.templates.map((t) => ({
+        ...t,
+        isArchived: t.id === "tpl-math" || t.isArchived,
+      })),
+    };
+    for (const status of [undefined, "published", "draft"]) {
+      expect(
+        buildCurriculumDirectory(owner, archived, { status }).rows.some((t) => t.id === "tpl-math"),
+      ).toBe(false);
+    }
+    expect(
+      buildCurriculumDirectory(owner, archived, { status: "archived" }).rows.some(
+        (t) => t.id === "tpl-math",
+      ),
+    ).toBe(true);
+    expect(buildCurriculumDetail(owner, archived, "ver-math-1")?.items).toEqual(
+      buildCurriculumDetail(owner, original, "ver-math-1")?.items,
+    );
+    expect(buildStudentStudyPlanPage(owner, "stu-1", archived)?.plans).toEqual(
+      buildStudentStudyPlanPage(owner, "stu-1", original)?.plans,
+    );
+    expect(
+      buildStudentStudyPlanPage(owner, "stu-1", archived)?.availableVersions.some(
+        (v) => v.id === "ver-math-1",
+      ),
+    ).toBe(false);
+    expect(
+      buildCurriculumDetail({ ...owner, organizationId: "other" }, archived, "ver-math-1"),
+    ).toBeUndefined();
+  });
   it("isolates organizations and orders content", () => {
     expect(
       buildCurriculumDirectory({ ...owner, organizationId: "other" }, source(), {}).rows,

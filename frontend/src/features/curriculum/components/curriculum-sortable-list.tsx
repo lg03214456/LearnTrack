@@ -19,12 +19,11 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { BookOpen, ChevronRight, GripVertical, Trash2 } from "lucide-react";
-import {
-  deleteTemplateItemAction,
-  reorderTemplateItemsAction,
-} from "@/app/actions/curriculum-actions";
+import { BookOpen, ChevronRight, GripVertical, Pencil, Trash2 } from "lucide-react";
+import { reorderTemplateItemsAction } from "@/app/actions/curriculum-actions";
 import type { CurriculumDetail, TemplateItemType, TemplateItemView } from "../curriculum.types";
+import { CurriculumItemEditor } from "./curriculum-item-editor";
+import { CurriculumItemDeleteDialog } from "./curriculum-item-delete-dialog";
 
 const itemTypeLabels: Record<TemplateItemType, string> = {
   chapter: "章節",
@@ -38,57 +37,18 @@ export function resolvePersistedOrder<T>(result: { ok: boolean }, next: T[], pre
   return result.ok ? next : previous;
 }
 
-function DeleteControl({ data, item }: { data: CurriculumDetail; item: TemplateItemView }) {
-  const [isConfirming, setIsConfirming] = useState(false);
-  if (!isConfirming)
-    return (
-      <button
-        onClick={() => setIsConfirming(true)}
-        aria-label={`刪除「${item.title}」`}
-        title={`刪除「${item.title}」`}
-        className="grid size-9 place-items-center rounded-lg border border-red-100 text-red-500 hover:bg-red-50"
-      >
-        <Trash2 size={16} />
-      </button>
-    );
-  return (
-    <div
-      role="group"
-      aria-label={`確認刪除「${item.title}」`}
-      className="flex flex-wrap items-center justify-end gap-2"
-    >
-      <span className="text-xs font-medium text-red-600">確定刪除？</span>
-      <button
-        type="button"
-        onClick={() => setIsConfirming(false)}
-        className="rounded-lg border px-3 py-2 text-xs font-bold"
-      >
-        取消
-      </button>
-      <form action={deleteTemplateItemAction}>
-        <input type="hidden" name="versionId" value={data.versionId} />
-        <input type="hidden" name="itemId" value={item.id} />
-        <input type="hidden" name="revision" value={data.revision} />
-        <button className="rounded-lg bg-red-600 px-3 py-2 text-xs font-bold text-white">
-          確認刪除
-        </button>
-      </form>
-    </div>
-  );
-}
-
 function SortableRow({
-  data,
   item,
   index,
   isPending,
   parentTitle,
+  onOpenDialog,
 }: {
-  data: CurriculumDetail;
   item: TemplateItemView;
   index: number;
   isPending: boolean;
   parentTitle?: string;
+  onOpenDialog: (mode: "edit" | "delete", item: TemplateItemView) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
@@ -132,7 +92,24 @@ function SortableRow({
         </p>
       </div>
       <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
-        <DeleteControl data={data} item={item} />
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() => onOpenDialog("edit", item)}
+          aria-label={`編輯「${item.title}」`}
+          className="grid size-9 place-items-center rounded-lg border text-teal-700 hover:bg-teal-50 disabled:opacity-50"
+        >
+          <Pencil size={16} />
+        </button>
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() => onOpenDialog("delete", item)}
+          aria-label={`刪除「${item.title}」`}
+          className="grid size-9 place-items-center rounded-lg border border-red-100 text-red-500 hover:bg-red-50 disabled:opacity-50"
+        >
+          <Trash2 size={16} />
+        </button>
       </div>
     </li>
   );
@@ -143,6 +120,10 @@ export function CurriculumSortableList({ data }: { data: CurriculumDetail }) {
     [orderedItems, setOrderedItems] = useState(data.items),
     [feedback, setFeedback] = useState<{ ok: boolean; message: string } | null>(null),
     [isPending, startTransition] = useTransition();
+  const [activeDialog, setActiveDialog] = useState<{
+    mode: "edit" | "delete";
+    item: TemplateItemView;
+  } | null>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
@@ -184,10 +165,10 @@ export function CurriculumSortableList({ data }: { data: CurriculumDetail }) {
             {orderedItems.map((item, index) => (
               <SortableRow
                 key={item.id}
-                data={data}
                 item={item}
                 index={index}
-                isPending={isPending}
+                isPending={isPending || activeDialog !== null}
+                onOpenDialog={(mode, selectedItem) => setActiveDialog({ mode, item: selectedItem })}
                 parentTitle={
                   orderedItems.find((candidate) => candidate.id === item.parentId)?.title
                 }
@@ -196,6 +177,20 @@ export function CurriculumSortableList({ data }: { data: CurriculumDetail }) {
           </ol>
         </SortableContext>
       </DndContext>
+      {activeDialog?.mode === "edit" && (
+        <CurriculumItemEditor
+          data={data}
+          item={activeDialog.item}
+          onClose={() => setActiveDialog(null)}
+        />
+      )}
+      {activeDialog?.mode === "delete" && (
+        <CurriculumItemDeleteDialog
+          data={data}
+          item={activeDialog.item}
+          onClose={() => setActiveDialog(null)}
+        />
+      )}
       {feedback && (
         <p
           role="status"

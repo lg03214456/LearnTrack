@@ -295,6 +295,9 @@ export const studentProfileStore = {
   addResult(record: StudentAssessmentResult) {
     results = [...results, record];
   },
+  addAssessment(record: StudentAssessment) {
+    assessments = [...assessments, record];
+  },
   updateResult(record: StudentAssessmentResult) {
     results = results.map((x) => (x.id === record.id ? record : x));
   },

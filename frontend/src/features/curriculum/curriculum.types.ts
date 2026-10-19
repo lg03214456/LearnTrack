@@ -1,7 +1,7 @@
 export type TemplateItemType = "chapter" | "unit" | "material" | "worksheet" | "assessment";
 export type VersionStatus = "draft" | "published";
-export type PlanStatus = "draft" | "active" | "completed" | "archived";
-export type LearningStatus = "pending" | "in_progress" | "completed" | "skipped";
+export type PlanStatus = "draft" | "active" | "completed" | "replaced" | "archived";
+export type LearningStatus = "pending" | "in_progress" | "completed" | "skipped" | "removed";
 export interface Dimension {
   id: string;
   name: string;
@@ -43,6 +43,8 @@ export interface CurriculumDirectory {
 }
 export interface StudyPlanView {
   id: string;
+  termId?: string;
+  subjectId?: string;
   term: string;
   subject: string;
   grade: string;
@@ -50,11 +52,14 @@ export interface StudyPlanView {
   templateName: string;
   version: number;
   status: PlanStatus;
+  replacedAt?: string;
+  completedAt?: string;
   completed: number;
   total: number;
   percentage: number;
   items: {
     id: string;
+    revision?: number;
     title: string;
     type: TemplateItemType;
     position: number;
@@ -65,7 +70,7 @@ export interface StudyPlanView {
 export interface StudentStudyPlanPage {
   student: { id: string; name: string; number: string };
   plans: StudyPlanView[];
-  availableVersions: { id: string; label: string }[];
+  availableVersions: { id: string; label: string; subjectId?: string }[];
   terms: Dimension[];
 }
 export interface CurriculumQuery {
@@ -79,6 +84,17 @@ export interface CreateTemplateCommand {
   gradeId: string;
   subjectId: string;
   publisherId: string;
+}
+export interface UpdateTemplateCommand extends CreateTemplateCommand {
+  templateId: string;
+  revision: number;
+}
+export interface CurriculumTemplateEditor extends UpdateTemplateCommand {
+  canEditClassification: boolean;
+  dimensions: CurriculumDirectory["dimensions"];
+}
+export interface UpdateTemplateItemCommand extends AddTemplateItemCommand {
+  itemId: string;
 }
 export interface AddTemplateItemCommand {
   versionId: string;

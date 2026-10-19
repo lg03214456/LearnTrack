@@ -1,62 +1,18 @@
 import { ORG } from "@/server/repositories/dashboard";
 import type {
-  TemplateItemType,
-  VersionStatus,
-  PlanStatus,
-  LearningStatus,
-} from "@/features/curriculum/curriculum.types";
-export interface CurriculumTemplate {
-  id: string;
-  organizationId: string;
-  name: string;
-  gradeId: string;
-  subjectId: string;
-  publisherId: string;
-  isArchived: boolean;
-}
-export interface TemplateVersion {
-  id: string;
-  organizationId: string;
-  templateId: string;
-  number: number;
-  status: VersionStatus;
-  revision: number;
-}
-export interface TemplateItem {
-  id: string;
-  organizationId: string;
-  versionId: string;
-  parentId?: string;
-  type: TemplateItemType;
-  title: string;
-  position: number;
-}
-export interface StudyPlan {
-  id: string;
-  organizationId: string;
-  studentId: string;
-  termId: string;
-  gradeId: string;
-  subjectId: string;
-  versionId: string;
-  status: PlanStatus;
-  replacedPlanId?: string;
-}
-export interface StudentLearningItem {
-  id: string;
-  organizationId: string;
-  planId: string;
-  sourceItemId?: string;
-  type: TemplateItemType;
-  title: string;
-  position: number;
-  status: LearningStatus;
-  isCustom: boolean;
-  note?: string;
-  updatedAt?: string;
-  updatedBy?: string;
-  revision: number;
-}
+  CurriculumTemplate,
+  TemplateVersion,
+  TemplateItem,
+  StudyPlan,
+  StudentLearningItem,
+} from "@/server/domain/curriculum";
+export type {
+  CurriculumTemplate,
+  TemplateVersion,
+  TemplateItem,
+  StudyPlan,
+  StudentLearningItem,
+} from "@/server/domain/curriculum";
 export const grades = [
     { id: "g7", name: "國一" },
     { id: "g8", name: "國二" },
@@ -145,6 +101,7 @@ const seed = (versionId: string, prefix: string, titles: string[]): TemplateItem
     return [
       {
         id: unit,
+        lineageId: `${prefix.charAt(0)}-unit-${i}`,
         organizationId: ORG,
         versionId,
         type: "unit",
@@ -153,6 +110,7 @@ const seed = (versionId: string, prefix: string, titles: string[]): TemplateItem
       },
       {
         id: `${prefix}-ch-${i}`,
+        lineageId: `${prefix.charAt(0)}-ch-${i}`,
         organizationId: ORG,
         versionId,
         parentId: unit,
@@ -178,6 +136,7 @@ const initialPlans: StudyPlan[] = [
     subjectId: "math",
     versionId: "ver-math-1",
     status: "active",
+    revision: 1,
   },
   {
     id: "plan-2",
@@ -188,6 +147,7 @@ const initialPlans: StudyPlan[] = [
     subjectId: "english",
     versionId: "ver-eng-1",
     status: "active",
+    revision: 1,
   },
   {
     id: "plan-3",
@@ -198,6 +158,7 @@ const initialPlans: StudyPlan[] = [
     subjectId: "math",
     versionId: "ver-math-1",
     status: "active",
+    revision: 1,
   },
 ];
 const initialLearningItems: StudentLearningItem[] = initialPlans.flatMap((plan) =>
@@ -208,10 +169,12 @@ const initialLearningItems: StudentLearningItem[] = initialPlans.flatMap((plan) 
       organizationId: ORG,
       planId: plan.id,
       sourceItemId: x.id,
+      lineageId: x.lineageId,
       type: x.type,
       title: x.title,
       position: x.position,
       status: i < 2 ? "completed" : i === 2 ? "in_progress" : "pending",
+      completedAt: i < 2 ? "2026-08-01T00:00:00.000Z" : undefined,
       isCustom: false,
       revision: 1,
     })),

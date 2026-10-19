@@ -1,4 +1,5 @@
 import { Filter } from "lucide-react";
+import { CurriculumCollapseIcon } from "./curriculum-collapse-icon";
 import { Card } from "@/components/ui";
 import type { CurriculumDirectory, CurriculumQuery } from "../curriculum.types";
 
@@ -34,38 +35,51 @@ export function CurriculumFilters({
   ];
   return (
     <Card className="mt-4 p-4">
-      <form method="get" className="grid gap-3 md:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
-        {dimensions.map((dimension) => (
-          <label key={dimension.name} className="text-xs font-medium text-slate-600">
-            {dimension.label}
-            <select
-              name={dimension.name}
-              defaultValue={dimension.value ?? ""}
-              className="input mt-1 w-full"
-            >
-              <option value="">{dimension.empty}</option>
-              {dimension.options.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.name}
-                </option>
-              ))}
+      <details open className="group">
+        <summary
+          aria-label="展開或收合篩選條件"
+          title="展開／收合篩選條件"
+          className="ml-auto w-fit cursor-pointer list-none rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 [&::-webkit-details-marker]:hidden"
+        >
+          <CurriculumCollapseIcon />
+        </summary>
+        <form method="get" className="mt-3 grid gap-3 md:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
+          {dimensions.map((dimension) => (
+            <label key={dimension.name} className="text-xs font-medium text-slate-600">
+              {dimension.label}
+              <select
+                name={dimension.name}
+                defaultValue={dimension.value ?? ""}
+                className="input mt-1 w-full"
+              >
+                <option value="">{dimension.empty}</option>
+                {dimension.options.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ))}
+          <label className="text-xs font-medium text-slate-600">
+            狀態
+            <select name="status" defaultValue={query.status ?? ""} className="input mt-1 w-full">
+              <option value="">全部狀態</option>
+              <option value="published">已發布</option>
+              <option value="draft">草稿</option>
+              <option value="archived">已封存</option>
             </select>
           </label>
-        ))}
-        <label className="text-xs font-medium text-slate-600">
-          狀態
-          <select name="status" defaultValue={query.status ?? ""} className="input mt-1 w-full">
-            <option value="">全部狀態</option>
-            <option value="published">已發布</option>
-            <option value="draft">草稿</option>
-            <option value="archived">已封存</option>
-          </select>
-        </label>
-        <button className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-teal-700 px-4 text-sm font-bold text-teal-800 hover:bg-teal-50">
-          <Filter size={15} />
-          套用篩選
-        </button>
-      </form>
+          <button
+            aria-label="套用篩選"
+            title="套用篩選"
+            className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-teal-700 px-4 text-sm font-bold text-teal-800 hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
+          >
+            <Filter size={18} aria-hidden="true" />
+            套用篩選
+          </button>
+        </form>
+      </details>
     </Card>
   );
 }

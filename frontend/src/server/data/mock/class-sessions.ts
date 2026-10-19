@@ -33,10 +33,25 @@ export interface StudentSessionProgressRecord {
   studentId: string;
   studyPlanId: string;
   learningItemId: string;
-  statusAfterSession: Exclude<LearningStatus, "skipped">;
+  statusAfterSession: Exclude<LearningStatus, "skipped" | "removed">;
   note?: string;
   recordedBy: string;
   recordedAt: string;
+  supersedesId?: string;
+  correctionReason?: string;
+  revision: number;
+}
+
+export interface ClassAttendanceRecord {
+  id: string;
+  organizationId: string;
+  classSessionId: string;
+  sessionMemberId: string;
+  studentId: string;
+  status: AttendanceStatus;
+  arrivedAt?: string;
+  recordedAt: string;
+  recordedBy: string;
   supersedesId?: string;
   correctionReason?: string;
   revision: number;
@@ -73,6 +88,7 @@ const initialProgress: StudentSessionProgressRecord[] = [];
 let sessions = structuredClone(initialSessions);
 let members = structuredClone(initialMembers);
 let progress = structuredClone(initialProgress);
+let attendance: ClassAttendanceRecord[] = [];
 let sequence = 10;
 
 export const classSessionStore = {
@@ -85,19 +101,24 @@ export const classSessionStore = {
   get progress() {
     return progress;
   },
+  get attendance() {
+    return attendance;
+  },
   reset() {
     sessions = structuredClone(initialSessions);
     members = structuredClone(initialMembers);
     progress = structuredClone(initialProgress);
+    attendance = [];
     sequence = 10;
   },
   snapshot() {
-    return structuredClone({ sessions, members, progress, sequence });
+    return structuredClone({ sessions, members, progress, attendance, sequence });
   },
   restore(snapshot: ReturnType<typeof this.snapshot>) {
     sessions = snapshot.sessions;
     members = snapshot.members;
     progress = snapshot.progress;
+    attendance = snapshot.attendance;
     sequence = snapshot.sequence;
   },
   addSession(record: ClassSessionRecord, roster: ClassSessionMemberRecord[]) {
@@ -109,6 +130,9 @@ export const classSessionStore = {
   },
   appendProgress(records: StudentSessionProgressRecord[]) {
     progress = [...progress, ...records];
+  },
+  appendAttendance(records: ClassAttendanceRecord[]) {
+    attendance = [...attendance, ...records];
   },
   nextId(prefix: string) {
     return `${prefix}-${sequence++}`;

@@ -6,6 +6,7 @@ import { can } from "@/server/authorization/policy";
 import { classSessionRepository } from "@/server/repositories/class-session";
 
 vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
   notFound: vi.fn(() => {
     throw new Error("NEXT_NOT_FOUND");
   }),
@@ -49,7 +50,7 @@ describe("class daily workspace route", () => {
     vi.clearAllMocks();
     vi.mocked(getAuthorizationContext).mockResolvedValue(actor as never);
     vi.mocked(can).mockReturnValue(true);
-    vi.mocked(classSessionRepository.open).mockReturnValue(workspace as never);
+    vi.mocked(classSessionRepository.open).mockResolvedValue(workspace as never);
   });
 
   it("renders the dated workspace and second-level back action", async () => {
@@ -77,7 +78,7 @@ describe("class daily workspace route", () => {
   });
 
   it("uses the not-found state when the class is outside scope", async () => {
-    vi.mocked(classSessionRepository.open).mockReturnValue(undefined);
+    vi.mocked(classSessionRepository.open).mockResolvedValue(undefined);
     await expect(
       Page({ params: Promise.resolve({ classId: "missing" }), searchParams: Promise.resolve({}) }),
     ).rejects.toThrow("NEXT_NOT_FOUND");

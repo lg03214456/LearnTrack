@@ -3,6 +3,7 @@ import type { AuthorizationContext } from "@/features/access-control/access-cont
 import type {
   AssessmentFilters,
   StudentDetailView,
+  StudentDetailReadOptions,
 } from "@/features/student-profile/student-profile.types";
 import { curriculumStore } from "@/server/data/mock/curriculum";
 import { classManagementStore } from "@/server/data/mock/class-management";
@@ -18,6 +19,7 @@ export interface StudentDetailRepository {
     actor: AuthorizationContext,
     studentId: string,
     filters: AssessmentFilters,
+    options?: StudentDetailReadOptions,
   ): Promise<StudentDetailView | undefined>;
 }
 
@@ -82,10 +84,10 @@ export const mockStudentDetailRepository: StudentDetailRepository = {
 };
 
 export const studentDetailRepository: StudentDetailRepository = {
-  get(actor, studentId, filters) {
+  get(actor, studentId, filters, options) {
     return selectDomainRepository({
       mock: mockStudentDetailRepository,
       supabase: supabaseStudentDetailRepository,
-    }).get(actor, studentId, filters);
+    }).get(actor, studentId, filters, options);
   },
 };

@@ -8,6 +8,7 @@ import type {
   ClassEditorView,
   ClassLifecycle,
   ClassOverviewRow,
+  ClassRosterView,
   ClassType,
   ExpectedAttendanceClass,
   WeeklyScheduleSlot,
@@ -52,6 +53,7 @@ interface StudentRow {
   id: string;
   display_name: string;
   student_number: string;
+  status: "active" | "leave";
 }
 interface MembershipRow {
   id: string;
@@ -127,7 +129,7 @@ export class SupabaseClassManagementRepository {
         .eq("status", "active"),
       client
         .from("students")
-        .select("id, display_name, student_number")
+        .select("id, display_name, student_number, status")
         .eq("organization_id", organizationId)
         .neq("status", "archived"),
       client
@@ -298,6 +300,32 @@ export class SupabaseClassManagementRepository {
         selected: selectedStudentIds.has(student.id),
       })),
       capabilities: capabilities(actor, record?.id),
+    };
+  }
+
+  async roster(actor: AuthorizationContext, classId: string): Promise<ClassRosterView | null> {
+    const source = await this.load(actor);
+    const record = source.classes.find((row) => row.id === classId);
+    if (!record || !canAccessClass(actor, record.id)) return null;
+    const enrolledStudentIds = new Set(
+      source.enrollments
+        .filter((enrollment) => enrollment.class_id === record.id)
+        .map((enrollment) => enrollment.student_id),
+    );
+    return {
+      classId: record.id,
+      className: record.name,
+      classCode: record.code ?? "",
+      capacity: record.capacity,
+      students: source.students
+        .filter((student) => enrolledStudentIds.has(student.id))
+        .map((student) => ({
+          id: student.id,
+          name: student.display_name,
+          number: student.student_number,
+          status: student.status,
+        }))
+        .sort((a, b) => a.number.localeCompare(b.number)),
     };
   }
 

@@ -10,6 +10,8 @@ import {
 import { curriculumStore } from "@/server/data/mock/curriculum";
 import { attendanceRows, students } from "@/server/data/mock/fixtures";
 import { buildClassDailyWorkspace } from "./class-session-core";
+import { selectDomainRepository } from "./domain-provider";
+import { supabaseClassSessionRepository } from "./class-session-supabase";
 
 const scheduleLabel = (classId: string, date: string) => {
   const weekday = new Date(`${date}T00:00:00Z`).getUTCDay();
@@ -68,7 +70,7 @@ function ensureSession(actor: AuthorizationContext, classId: string, date: strin
   return session;
 }
 
-export const classSessionRepository = {
+export const mockClassSessionRepository = {
   open(
     actor: AuthorizationContext,
     classId: string,
@@ -90,6 +92,7 @@ export const classSessionRepository = {
       session,
       members: classSessionStore.members,
       progress: classSessionStore.progress,
+      attendance: classSessionStore.attendance,
       students,
       enrollments: classManagementStore.enrollments,
       plans: curriculumStore.plans,
@@ -99,5 +102,14 @@ export const classSessionRepository = {
       subjects: curriculumStore.subjects,
       publishers: curriculumStore.publishers,
     });
+  },
+};
+
+export const classSessionRepository = {
+  async open(actor: AuthorizationContext, classId: string, date: string) {
+    return selectDomainRepository({
+      mock: mockClassSessionRepository,
+      supabase: supabaseClassSessionRepository,
+    }).open(actor, classId, date);
   },
 };

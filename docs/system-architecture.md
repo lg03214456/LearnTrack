@@ -25,6 +25,10 @@ flowchart LR
 
 ### 現行責任邊界
 
+今日課堂現已新增 Supabase provider：`page → classSessionRepository → SupabaseClassSessionRepository → user-JWT RPC`；寫入由 `Server Action → class-session-persistence-service → repository → PostgreSQL transaction`。SQL 回傳 tenant-scoped workspace projection，adapter 檢查 class/date 與陣列契約，再收斂 UI capability。失敗不使用 Mock 資料。Mock adapter 保留供明確 development provider／測試使用；獨立點名 editor 尚未整體切換。
+
+教材與學生修課計畫同樣依 domain provider 成對切換讀寫：`page → curriculumRepository → SupabaseCurriculumRepository → read_curriculum_workspace`；`Action → curriculum-persistence-service → repository → mutate_curriculum_workspace`。資料庫端重新檢查機構權限與學生關係、鎖定 aggregate、核對 revision，再原子執行發布、排序、複製或替換計畫。領域型別位於 `server/domain/curriculum.ts`，純 view-model builder 不依賴 Mock 型別。失敗不退回記憶體。先部署 `202610100002_curriculum_functions.sql`，再部署應用程式。
+
 | 區域 | 執行位置 | 責任 |
 |---|---|---|
 | `src/app/` | Next.js Server | 路由、頁面組合、初始資料取得 |

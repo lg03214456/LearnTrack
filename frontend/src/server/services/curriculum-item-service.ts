@@ -78,9 +78,11 @@ export function addTemplateItem(
   if (!input.title.trim() || !allowedItemTypes.includes(input.type) || (input.parentId && !parent))
     return result(false, "VALIDATION_ERROR", "教材項目或父項目無效");
   if (parent?.parentId) return result(false, "VALIDATION_ERROR", "教材階層最多兩層");
+  const createdItemId = `item-${itemId()}`;
   curriculumStore.addItems([
     {
-      id: `item-${itemId()}`,
+      id: createdItemId,
+      lineageId: createdItemId,
       organizationId: actor.organizationId,
       versionId: input.versionId,
       parentId: parent?.id,
